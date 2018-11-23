@@ -6,4 +6,4 @@ dotnet: 2.1.300
 before_script:
   - dotnet restore
 script:  
-  - dotnet test ./test/KuvaldaTest -c Release
+  - dotnet test ./test/KuvaldaTests -c Release
