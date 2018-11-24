@@ -16,7 +16,7 @@ namespace KuvaldaTests
             // Arrange
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                { @"c:/folder", new MockDirectoryData() },
+                { @"/folder", new MockDirectoryData() },
             });
             var flatTree = new[]
             {
@@ -37,7 +37,7 @@ namespace KuvaldaTests
             // Arrange
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                { @"c:/file", new MockFileData("hash") },
+                { @"/file", new MockFileData("hash") },
             });
             var flatTree = new[]
             {
