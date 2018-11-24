@@ -6,14 +6,14 @@ namespace Kuvalda.Tree
 {
     public class FlatTreeCreator : IFlatTreeCreator
     {
-        public IEnumerable<FlatTreeItem> Create(TreeNode tree, string context = "/")
+        public IEnumerable<FlatTreeItem> Create(TreeNode tree, string context = "")
         {
             if (tree == null)
             {
                 throw new ArgumentNullException(nameof(tree));
             }
 
-            var nameWithContext = context + tree.Name;
+            var nameWithContext = (context + tree.Name).TrimStart('/');
             var treeItem = new FlatTreeItem(nameWithContext.Replace("//", "/"), tree);
             var currentItemList = new[] {treeItem};
             

@@ -41,19 +41,19 @@ namespace KuvaldaTests
             // Assetr
             Assert.AreEqual(5, flat.Count());
             
-            Assert.AreEqual(flat[0].Name, "/");
+            Assert.AreEqual(flat[0].Name, "");
             Assert.AreEqual(flat[0].Node, tree);
             
-            Assert.AreEqual(flat[1].Name, "/" + tree.Nodes.ElementAt(0).Name);
+            Assert.AreEqual(flat[1].Name, tree.Nodes.ElementAt(0).Name);
             Assert.AreEqual(flat[1].Node, tree.Nodes.ElementAt(0));
             
-            Assert.AreEqual(flat[2].Name, "/" + tree.Nodes.ElementAt(1).Name);
+            Assert.AreEqual(flat[2].Name, tree.Nodes.ElementAt(1).Name);
             Assert.AreEqual(flat[2].Node, tree.Nodes.ElementAt(1));
             
-            Assert.AreEqual(flat[3].Name, "/" + tree.Nodes.ElementAt(1).Name + "/" + ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(0).Name);
+            Assert.AreEqual(flat[3].Name, tree.Nodes.ElementAt(1).Name + "/" + ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(0).Name);
             Assert.AreEqual(flat[3].Node, ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(0));
             
-            Assert.AreEqual(flat[4].Name, "/" + tree.Nodes.ElementAt(1).Name + "/" + ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(1).Name);
+            Assert.AreEqual(flat[4].Name, tree.Nodes.ElementAt(1).Name + "/" + ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(1).Name);
             Assert.AreEqual(flat[4].Node, ((TreeNodeFolder)tree.Nodes.ElementAt(1)).Nodes.ElementAt(1));
         }
         
