@@ -7,21 +7,20 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Kuvalda.Repository;
 using Kuvalda.Tree;
 using Kuvalda.Tree.Data;
 using Newtonsoft.Json;
 
-namespace SimpleKuvaldaVCS_CLI
+namespace SimpleKvd.CLI
 {
     class Program
     {
-        private static string KvdSysemDirectoryPath = ".skvd";
+        private static string KvdSystemDirectoryPath = ".skvd";
         
         public static IObjectStorage TreesStorage => new FileSystemObjectStorage(new FileSystem(), TreesPath);
         public static IObjectStorage TreeDiffsStorage => new FileSystemObjectStorage(new FileSystem(), TreeDiffsPath);
-        public static IObjectStorage ModHahsesStorage => new FileSystemObjectStorage(new FileSystem(), ModificationHashesPath);
+        public static IObjectStorage ModHashesStorage => new FileSystemObjectStorage(new FileSystem(), ModificationHashesPath);
         public static IObjectStorage BlobsStorage => new FileSystemObjectStorage(new FileSystem(), BlobsPath);
 
         static async Task Main(string[] args)
@@ -98,7 +97,7 @@ namespace SimpleKuvaldaVCS_CLI
 
         private static async Task<IEnumerable<string>> SaveHashedBlobs(string[] args)
         {
-            var treeLeftStream = ModHahsesStorage.Get(args[0]);
+            var treeLeftStream = ModHashesStorage.Get(args[0]);
 
             IDictionary<string, string> hashes = null;
 
@@ -145,7 +144,7 @@ namespace SimpleKuvaldaVCS_CLI
         {
             var hashes = await HashModifications(args);
             
-            var hashString = SaveObjectToStorage(hashes, ModHahsesStorage);
+            var hashString = SaveObjectToStorage(hashes, ModHashesStorage);
 
             return hashString;
         }
@@ -153,7 +152,7 @@ namespace SimpleKuvaldaVCS_CLI
         private static void PrintUsage()
         {
             using (var stream = new StreamReader(Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream($"{nameof(SimpleKuvaldaVCS_CLI)}.usage.txt")))
+                .GetManifestResourceStream($"{nameof(CLI)}.usage.txt")))
             {
                 Console.Write(stream.ReadToEnd());
                 Console.WriteLine();
@@ -315,7 +314,7 @@ namespace SimpleKuvaldaVCS_CLI
             var treeFilter = new TreeFilter(fileSystem);
             treeFilter.PredefinedIgnores = new List<string>
             {
-                KvdSysemDirectoryPath
+                KvdSystemDirectoryPath
             };
 
             var tree = await treeCreator.Create(path);
@@ -331,7 +330,7 @@ namespace SimpleKuvaldaVCS_CLI
             }
         }
         
-        public static string SystemPath => Path.Combine(Environment.CurrentDirectory, KvdSysemDirectoryPath);
+        public static string SystemPath => Path.Combine(Environment.CurrentDirectory, KvdSystemDirectoryPath);
         public static string TreesPath => Path.Combine(SystemPath, "trees");
         public static string TreeDiffsPath => Path.Combine(SystemPath, "diffs");
         public static string ModificationHashesPath => Path.Combine(SystemPath, "hashes");

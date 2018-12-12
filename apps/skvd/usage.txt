@@ -1,17 +1,6 @@
-usage: skvd [options] [command [options]]
+usage: skvd [command [options]]
 
-options:
-    -v|--version    print version
-    -h|--help       print full help
-    
-commands top-level:
-
-    snapshot [message]   Create snapshot of current working directory state and store it to .skvd system folder.
-                        This command create and save tree, after save file states to .skvd/object store.
-                        After work return commit hash to stdout.
-
-    
-commands low-lovel:
+commands low-level:
 
     save-blob <path>                    save file at <path> to objects storage and return it hash
     create-tree [path]                  create tree and write it to stdout
