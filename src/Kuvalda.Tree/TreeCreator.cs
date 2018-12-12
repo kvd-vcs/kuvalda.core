@@ -1,6 +1,7 @@
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Kuvalda.Tree
@@ -15,6 +16,15 @@ namespace Kuvalda.Tree
         }
 
         public async Task<TreeNode> Create(string path)
+        {
+            var result = await CreateInterlal(path);
+            return new TreeNodeFolder("")
+            {
+                Nodes = ((TreeNodeFolder)result).Nodes
+            };
+        }
+        
+        private async Task<TreeNode> CreateInterlal(string path)
         {
             if (!_fileSystem.Directory.Exists(path))
             {
@@ -37,7 +47,7 @@ namespace Kuvalda.Tree
         {
             if (_fileSystem.Directory.Exists(path))
             {
-                return await Create(path);
+                return await CreateInterlal(path);
             }
 
             return CreateFile(path);

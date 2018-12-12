@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -11,6 +12,8 @@ namespace Kuvalda.Tree
         public const string IgnoreFileName = ".kvdignore";
 
         private readonly IFileSystem _fileSystem;
+
+        public IList<string> PredefinedIgnores { get; set; } 
 
         public TreeFilter(IFileSystem fileSystem)
         {
@@ -29,14 +32,20 @@ namespace Kuvalda.Tree
 
         private async Task<TreeNode> FilterFolder(TreeNodeFolder folder, string contextPath)
         {
-            if (folder.Nodes.Any(f => f.Name == IgnoreFileName))
+            var result = (TreeNodeFolder)folder.Clone();
+            
+            if (PredefinedIgnores != null)
+            {
+                result.Nodes = result.Nodes.Where(t => !PredefinedIgnores.Contains(t.Name)).ToList();
+            }
+            
+            if (result.Nodes.Any(f => f.Name == IgnoreFileName))
             {
                 var ignores = JsonConvert
                     .DeserializeObject<string[]>(await ReadAllTextAsync(_fileSystem.Path.Combine(contextPath, IgnoreFileName)))
                     .Select(s => new Regex(s));
                 
-                var result = new TreeNodeFolder(folder.Name);
-                var filteredTasks = folder.Nodes
+                var filteredTasks = result.Nodes
                     .Where(entry => !ignores.Any(matcher => matcher.IsMatch(entry.Name)))
                     .Select(async entry => await Filter(entry, contextPath));
 
@@ -47,7 +56,7 @@ namespace Kuvalda.Tree
                 return result;
             }
 
-            return folder;
+            return result;
         }
 
         private async Task<string> ReadAllTextAsync(string path)

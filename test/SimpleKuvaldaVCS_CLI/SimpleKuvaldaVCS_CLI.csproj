@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <AssemblyName>skvd</AssemblyName>
+        <LangVersion>7.3</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <None Remove="help.txt" />
+      <EmbeddedResource Include="usage.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Kuvalda.Repository\Kuvalda.Repository.csproj" />
+      <ProjectReference Include="..\..\src\Kuvalda.Tree.Data\Kuvalda.Tree.Data.csproj" />
+      <ProjectReference Include="..\..\src\Kuvalda.Tree\Kuvalda.Tree.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+      <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />
+    </ItemGroup>
+
+</Project>

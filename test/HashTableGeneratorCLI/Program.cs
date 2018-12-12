@@ -21,6 +21,7 @@ namespace HashTableGeneratorCLI
             var tree = await treeCreator.Create(args[0]);
             var treeFiltered = await treeFilter.Filter(tree, args[0]);
             var flatTree = flatTreeCreator.Create(treeFiltered);
+            
             var hashes = hashComputer.Compute(flatTree, Environment.CurrentDirectory);
             
             File.WriteAllText(args[1], JsonConvert.SerializeObject(hashes, Formatting.Indented));
