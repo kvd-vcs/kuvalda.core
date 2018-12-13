@@ -5,9 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Reference Include="System.IO.Abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=96bf224d23c43e59">
-        <HintPath>..\..\..\..\Users\ctapb\.nuget\packages\system.io.abstractions\2.2.9-beta\lib\netstandard2.0\System.IO.Abstractions.dll</HintPath>
-      </Reference>
+      <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />
     </ItemGroup>
 
 </Project>
