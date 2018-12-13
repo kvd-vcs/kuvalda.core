@@ -4,6 +4,7 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp2.1</TargetFramework>
         <LangVersion>7.3</LangVersion>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     </PropertyGroup>
 
     <ItemGroup>
@@ -13,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27212-02" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
       <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />
     </ItemGroup>
@@ -20,6 +22,10 @@
     <ItemGroup>
       <None Remove="usage.txt" />
       <EmbeddedResource Include="usage.txt" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <RdXmlFile Include="rd.xml" />
     </ItemGroup>
 
 </Project>

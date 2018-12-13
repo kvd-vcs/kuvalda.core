@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +23,7 @@ namespace SimpleKvd.CLI
         public static IObjectStorage TreeDiffsStorage => new FileSystemObjectStorage(new FileSystem(), TreeDiffsPath);
         public static IObjectStorage ModHashesStorage => new FileSystemObjectStorage(new FileSystem(), ModificationHashesPath);
         public static IObjectStorage BlobsStorage => new FileSystemObjectStorage(new FileSystem(), BlobsPath);
+        public static IObjectStorage CommitsStorage => new FileSystemObjectStorage(new FileSystem(), CommitsPath);
 
         static async Task Main(string[] args)
         {
@@ -51,7 +53,7 @@ namespace SimpleKvd.CLI
             
             if (args[0] == "save-init-tree")
             {
-                Console.Write(await SaveEmptyTree());
+                Console.Write(SaveEmptyTree());
                 return;
             }
             
@@ -88,6 +90,24 @@ namespace SimpleKvd.CLI
                 }
                 return;
             }
+            
+            if (args[0] == "create-commit")
+            {
+                Console.Write(await CreateCommit(args.Skip(1).ToArray()));
+                return;
+            }
+            
+            if (args[0] == "create-init-commit")
+            {
+                Console.Write(CreateInitCommit());
+                return;
+            }
+            
+            if (args[0] == "checkout")
+            {
+                await Checkout(args.Skip(1).ToArray());
+                return;
+            }
 
             Console.WriteLine("command not recognized!");
             Console.WriteLine("");
@@ -95,20 +115,119 @@ namespace SimpleKvd.CLI
             Environment.ExitCode = 1;
         }
 
-        private static async Task<IEnumerable<string>> SaveHashedBlobs(string[] args)
+        
+        private static async Task Checkout(string[] args)
         {
-            var treeLeftStream = ModHashesStorage.Get(args[0]);
+            var targetCommit = await ReadFromStorage<CommitModel>(args[0], CommitsStorage);
+            
+            var currentTree = await CreateTreeFiltered(Environment.CurrentDirectory);
+            var targetTree = await ReadFromStorage<TreeNode>(targetCommit.TreeHash, TreesStorage);
 
-            IDictionary<string, string> hashes = null;
+            var diff = DiffTrees(currentTree, targetTree);
 
-            using (var textStream = new StreamReader(treeLeftStream))
+            foreach (var removed in diff.Removed)
             {
-                var data = await textStream.ReadToEndAsync();
-                hashes = JsonConvert.DeserializeObject<IDictionary<string, string>>(data, new TreeNodeConverter());
+                if (!File.Exists(removed))
+                {
+                    continue;
+                }
+                
+                File.Delete(removed);
+                Console.WriteLine($" - {removed}");
             }
 
-            var saveTasks = new List<Task<string>>();
+            var targetHashes = await GetHashesForCommit(targetCommit);
+            var treeFlatter = new FlatTreeCreator();
+            var flatTargetTree = treeFlatter.Create(targetTree);
+
+            foreach (var adding in diff.Added.Where(a => targetHashes.ContainsKey(a)))
+            {
+                using (var addStream = File.Create(adding))
+                {
+                    var source = BlobsStorage.Get(targetHashes[adding]);
+                    await source.CopyToAsync(addStream);
+                    await addStream.FlushAsync();
+                    addStream.Close();
+                    
+                    File.SetLastWriteTimeUtc(adding, ((TreeNodeFile)flatTargetTree.First(t => t.Name == adding).Node).ModificationTime);
+                    
+                    Console.WriteLine($" + {adding}");
+                }
+            }
             
+            foreach (var modified in diff.Modified.Where(a => targetHashes.ContainsKey(a)))
+            {
+                using (var modifyStream = File.Open(modified, FileMode.Truncate, FileAccess.Write, FileShare.Write))
+                {
+                    var source = BlobsStorage.Get(targetHashes[modified]);
+                    await source.CopyToAsync(modifyStream);
+                    await modifyStream.FlushAsync();
+                    modifyStream.Close();
+                    
+                    File.SetLastWriteTimeUtc(modified, ((TreeNodeFile)flatTargetTree.First(t => t.Name == modified).Node).ModificationTime);
+                    
+                    Console.WriteLine($" * {modified}");
+                }
+            }
+        }
+
+        private static string CreateInitCommit()
+        {
+            EnsureSystemFolderCreated();
+            
+            var tree = new TreeNodeFolder("");
+            var treeHash = SaveObjectToStorage(tree, TreesStorage);
+
+            var hashes = new Dictionary<string, string>();
+            var hashAddress = SaveObjectToStorage(hashes, ModHashesStorage);
+
+            var commitObject = new CommitModel()
+            {
+                Parents = null,
+                Labels = new Dictionary<string, string>(),
+                HashesAddress = hashAddress,
+                TreeHash = treeHash
+            };
+
+            return SaveObjectToStorage(commitObject, CommitsStorage);
+        }
+
+        private static async Task<string> CreateCommit(string[] args)
+        {
+            EnsureSystemFolderCreated();
+            
+            var tree = await CreateTreeFiltered(Environment.CurrentDirectory);
+            var treeHash = SaveObjectToStorage(tree, TreesStorage);
+
+            var prevCommit = await ReadFromStorage<CommitModel>(args[0], CommitsStorage);
+
+            var hashes = await HashModifications(new[] {prevCommit.TreeHash, treeHash});
+            var hashAddress = SaveObjectToStorage(hashes, ModHashesStorage);
+
+            await SaveHashedBlobs(hashes);
+
+            var commitObject = new CommitModel()
+            {
+                Parents = new[] {args[0]},
+                Labels = new Dictionary<string, string>(),
+                HashesAddress = hashAddress,
+                TreeHash = treeHash
+            };
+
+            return SaveObjectToStorage(commitObject, CommitsStorage);
+        }
+
+        private static async Task<IEnumerable<string>> SaveHashedBlobs(string[] args)
+        {
+            var hashes = await ReadFromStorage<IDictionary<string, string>>(args[0], ModHashesStorage);
+
+            return await SaveHashedBlobs(hashes);
+        }
+
+        private static async Task<IEnumerable<string>> SaveHashedBlobs(IDictionary<string, string> hashes)
+        {
+            var saveTasks = new List<Task<string>>();
+
             foreach (var hashRow in hashes)
             {
                 saveTasks.Add(SaveBlob(hashRow.Key, hashRow.Value));
@@ -129,7 +248,7 @@ namespace SimpleKvd.CLI
             return hash;
         }
 
-        private static async Task<string> SaveEmptyTree()
+        private static string SaveEmptyTree()
         {
             EnsureSystemFolderCreated();
             
@@ -152,7 +271,7 @@ namespace SimpleKvd.CLI
         private static void PrintUsage()
         {
             using (var stream = new StreamReader(Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream($"{nameof(CLI)}.usage.txt")))
+                .GetManifestResourceStream("skvd.usage.txt")))
             {
                 Console.Write(stream.ReadToEnd());
                 Console.WriteLine();
@@ -199,7 +318,7 @@ namespace SimpleKvd.CLI
         private static async Task<DifferenceEntries> DifferenceTrees(string[] args)
         {
             var (leftTree, rightTree) = await GetTrees(args);
-            var result = DiffTrees(leftTree, rightTree);            
+            var result = DiffTrees(leftTree, rightTree);
             return result;
         }
 
@@ -254,6 +373,21 @@ namespace SimpleKvd.CLI
             string hashString = Hash(bytes);
             storage.Set(hashString, new MemoryStream(bytes));
             return hashString;
+        }
+
+        private static async Task<T> ReadFromStorage<T>(string key, IObjectStorage strage, JsonConverter converter = null)
+        {
+            if (converter == null)
+            {
+                converter = new TreeNodeConverter();
+            }
+            
+            var treeLeftStream = strage.Get(key);
+            using (var textStream = new StreamReader(treeLeftStream))
+            {
+                var data = await textStream.ReadToEndAsync();
+                return JsonConvert.DeserializeObject<T>(data, converter);
+            }
         }
 
         private static string Hash(byte[] bytes)
@@ -329,11 +463,36 @@ namespace SimpleKvd.CLI
                 Directory.CreateDirectory(SystemPath);
             }
         }
+
+        private static async Task<IDictionary<string, string>> GetHashesForCommit(CommitModel commit)
+        {
+            var result = await ReadFromStorage<IDictionary<string, string>>(commit.HashesAddress, ModHashesStorage);
+            
+            var prevCommits = commit.Parents?.Select(h =>
+                ReadFromStorage<CommitModel>(h, CommitsStorage).GetAwaiter().GetResult()) ?? new List<CommitModel>();
+
+            foreach (var prevCommit in prevCommits)
+            {
+                var prevState = await GetHashesForCommit(prevCommit);
+                foreach (var prevRow in prevState)
+                {
+                    if (result.ContainsKey(prevRow.Key))
+                    {
+                        continue;
+                    }
+                    
+                    result.Add(prevRow);
+                }
+            }
+
+            return result;
+        }
         
         public static string SystemPath => Path.Combine(Environment.CurrentDirectory, KvdSystemDirectoryPath);
         public static string TreesPath => Path.Combine(SystemPath, "trees");
         public static string TreeDiffsPath => Path.Combine(SystemPath, "diffs");
         public static string ModificationHashesPath => Path.Combine(SystemPath, "hashes");
         public static string BlobsPath => Path.Combine(SystemPath, "blobs");
+        public static string CommitsPath => Path.Combine(SystemPath, "commits");
     }
 }

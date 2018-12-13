@@ -1,6 +1,11 @@
 usage: skvd [command [options]]
 
-commands low-level:
+high-level commands:
+
+    checkout <chash>
+
+
+low-level commands:
 
     save-blob <path>                    save file at <path> to objects storage and return it hash
     create-tree [path]                  create tree and write it to stdout
@@ -10,4 +15,6 @@ commands low-level:
     save-diff-trees <hash1> <hash2>     create difference between trees from hash1 and hash2 and after save it to system folder and write hash to stdout
     hash-diff <thash1> <thash2>         create hash file list for added and modified entries for tree difference at <hash> in storage
     save-hash-diff <thash1> <thash2>
-    save-blobs-hashed <hhash1>
+    save-blobs-hashed <hhash>
+    create-commit <chash>
+    create-init-commit

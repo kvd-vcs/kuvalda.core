@@ -56,9 +56,10 @@ namespace Kuvalda.Tree
 
                     result[item.Name] = sb.ToString();
                 }
+                
             });
 
-            return result;
+            return new SortedDictionary<string, string>(result);
         }
     }
 }
