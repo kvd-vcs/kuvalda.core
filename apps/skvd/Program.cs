@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using CommandDotNet;
 using Kuvalda.Repository;
 using Kuvalda.Tree;
 using Kuvalda.Tree.Data;
@@ -108,6 +111,51 @@ namespace SimpleKvd.CLI
                 await Checkout(args.Skip(1).ToArray());
                 return;
             }
+            
+            if (args[0] == "write-ref")
+            {
+                WriteRef(args.Skip(1).ToArray());
+                return;
+            }
+            
+            if (args[0] == "write-head")
+            {
+                WriteHead(args.Skip(1).ToArray());
+                return;
+            }
+
+            if (args[0] == "get-head-commit")
+            {
+                var headCommit = GetHeadCommit();
+
+                if (headCommit == null)
+                {
+                    Console.WriteLine("HEAD is inconsistency!");
+                    Environment.ExitCode = 1;
+                    return;
+                }
+                
+                Console.Write(headCommit);
+                return;
+            }
+            
+            if (args[0] == "init")
+            {
+                Initialize();
+                return;
+            }
+            
+            if (args[0] == "commit")
+            {
+                Console.Write(await Commit(args.Skip(1).ToArray()));
+                return;
+            }
+            
+            if (args[0] == "log")
+            {
+                await WriteLog(args.Skip(1).ToArray());
+                return;
+            }
 
             Console.WriteLine("command not recognized!");
             Console.WriteLine("");
@@ -115,7 +163,128 @@ namespace SimpleKvd.CLI
             Environment.ExitCode = 1;
         }
 
-        
+        private static async Task WriteLog(string[] args)
+        {
+            var chash = GetHeadCommit();
+
+            if (args.Length == 1)
+            {
+                chash = args[0];
+            }
+
+            await LogCommitRecursive(chash);
+        }
+
+        private static async Task LogCommitRecursive(string chash)
+        {
+            var commit = await ReadFromStorage<CommitModel>(chash, CommitsStorage);
+            var message = "";
+            commit.Labels.TryGetValue("message", out message);
+            if (message == null)
+            {
+                message = "";
+            }
+            
+            Console.Write($"{chash} {message}");
+            if (commit.Parents != null && commit.Parents.Any())
+            {
+                Console.WriteLine();
+                await LogCommitRecursive(commit.Parents.First());
+            }
+        }
+
+        private static async Task<string> Commit(string[] args)
+        {
+            EnsureSystemFolderCreated();
+
+            var labels = new Dictionary<string, string>();
+            
+            if (args.Length == 2 && args[0] == "-m")
+            {
+                labels["message"] = args[1];
+            }
+            
+            var chash = await CreateCommit(GetHeadCommit(), labels);
+
+            WriteHead(new[] {chash});
+            
+            return chash;
+        }
+
+        private static void Initialize()
+        {
+            EnsureSystemFolderCreated();
+            var initChash = CreateInitCommit();
+            WriteRef(new []{"master", initChash});
+            WriteHead(new[]{"master"});
+        }
+
+        private static string GetHeadCommit()
+        {
+            var headData = File.ReadAllText(HeadPath);
+            var headRefPath = Path.Combine(RefsPath, headData);
+
+            if (File.Exists(headRefPath))
+            {
+                return File.ReadAllText(headRefPath);
+            }
+
+            if (!CommitsStorage.Exist(headData))
+            {
+                return null;
+            }
+
+            return headData;
+        }
+
+        private static void WriteHead(string[] args)
+        {
+            EnsureSystemFolderCreated();
+
+            var refPath = Path.Combine(RefsPath, args[0]);
+
+            if (File.Exists(refPath))
+            {
+                File.WriteAllText(HeadPath, args[0]);
+                return;
+            }
+            
+            if (!CommitsStorage.Exist(args[0]))
+            {
+                Console.Write($"commit {args[0]} not exists");
+                Environment.ExitCode = 1;
+                return;
+            }
+            
+            File.WriteAllText(HeadPath, args[0]);
+        }
+
+        private static void WriteRef(string[] args)
+        {
+            EnsureSystemFolderCreated();
+
+            if (!Directory.Exists(RefsPath))
+            {
+                Directory.CreateDirectory(RefsPath);
+            }
+
+            var refPath = Path.Combine(RefsPath, args[0]);
+            
+            if (!CommitsStorage.Exist(args[1]))
+            {
+                Console.WriteLine($"commit {args[1]} not exists");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            if (File.Exists(refPath))
+            {
+                Console.WriteLine($"Overwrite exists ref");
+            }
+            
+            File.WriteAllText(refPath, args[1]);
+        }
+
         private static async Task Checkout(string[] args)
         {
             var targetCommit = await ReadFromStorage<CommitModel>(args[0], CommitsStorage);
@@ -169,6 +338,8 @@ namespace SimpleKvd.CLI
                     Console.WriteLine($" * {modified}");
                 }
             }
+            
+            WriteHead(new [] {args[0]});
         }
 
         private static string CreateInitCommit()
@@ -184,7 +355,10 @@ namespace SimpleKvd.CLI
             var commitObject = new CommitModel()
             {
                 Parents = null,
-                Labels = new Dictionary<string, string>(),
+                Labels = new Dictionary<string, string>()
+                {
+                    ["message"] = "init"
+                },
                 HashesAddress = hashAddress,
                 TreeHash = treeHash
             };
@@ -195,11 +369,19 @@ namespace SimpleKvd.CLI
         private static async Task<string> CreateCommit(string[] args)
         {
             EnsureSystemFolderCreated();
+
+            var chash = args[0];
+            var labels = new Dictionary<string, string>();
             
+            return await CreateCommit(chash, labels);
+        }
+
+        private static async Task<string> CreateCommit(string chash, Dictionary<string, string> labels)
+        {
             var tree = await CreateTreeFiltered(Environment.CurrentDirectory);
             var treeHash = SaveObjectToStorage(tree, TreesStorage);
 
-            var prevCommit = await ReadFromStorage<CommitModel>(args[0], CommitsStorage);
+            var prevCommit = await ReadFromStorage<CommitModel>(chash, CommitsStorage);
 
             var hashes = await HashModifications(new[] {prevCommit.TreeHash, treeHash});
             var hashAddress = SaveObjectToStorage(hashes, ModHashesStorage);
@@ -208,8 +390,8 @@ namespace SimpleKvd.CLI
 
             var commitObject = new CommitModel()
             {
-                Parents = new[] {args[0]},
-                Labels = new Dictionary<string, string>(),
+                Parents = new[] {chash},
+                Labels = labels,
                 HashesAddress = hashAddress,
                 TreeHash = treeHash
             };
@@ -244,7 +426,7 @@ namespace SimpleKvd.CLI
 
             var file = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
             var hash = hashPredefined ?? Hash(file);
-            BlobsStorage.Set(hash, file);
+            await Task.Run(() => BlobsStorage.Set(hash, file));
             return hash;
         }
 
@@ -461,6 +643,7 @@ namespace SimpleKvd.CLI
             if (!Directory.Exists(SystemPath))
             {
                 Directory.CreateDirectory(SystemPath);
+                File.WriteAllText(HeadPath, "");
             }
         }
 
@@ -494,5 +677,7 @@ namespace SimpleKvd.CLI
         public static string ModificationHashesPath => Path.Combine(SystemPath, "hashes");
         public static string BlobsPath => Path.Combine(SystemPath, "blobs");
         public static string CommitsPath => Path.Combine(SystemPath, "commits");
+        public static string RefsPath => Path.Combine(SystemPath, "refs");
+        public static string HeadPath => Path.Combine(SystemPath, "HEAD");
     }
 }

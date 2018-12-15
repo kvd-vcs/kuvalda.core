@@ -7,5 +7,3 @@ before_script:
   - dotnet restore
 script:  
   - dotnet test ./test/KuvaldaTests -c Release
-  - cd ./apps/skvd
-  - dotnet publish -c release -r win10-x64

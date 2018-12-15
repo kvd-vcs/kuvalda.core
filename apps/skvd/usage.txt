@@ -3,6 +3,10 @@ usage: skvd [command [options]]
 high-level commands:
 
     checkout <chash>
+    init
+    commit [-m message]
+    log [<chash>]
+    
 
 
 low-level commands:
@@ -18,3 +22,6 @@ low-level commands:
     save-blobs-hashed <hhash>
     create-commit <chash>
     create-init-commit
+    write-ref <refname> <chash>
+    write-head <refname>|<chash>
+    get-head-commit
