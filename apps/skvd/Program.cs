@@ -156,11 +156,56 @@ namespace SimpleKvd.CLI
                 await WriteLog(args.Skip(1).ToArray());
                 return;
             }
+            
+            if (args[0] == "status")
+            {
+                await Status();
+                return;
+            }
 
             Console.WriteLine("command not recognized!");
             Console.WriteLine("");
             PrintUsage();
             Environment.ExitCode = 1;
+        }
+
+        private static async Task Status()
+        {
+            var currentTree = await CreateTreeFiltered(Environment.CurrentDirectory);
+            var lastCommit = await ReadFromStorage<CommitModel>(GetHeadCommit(), CommitsStorage);
+            var lastTree = await ReadFromStorage<TreeNode>(lastCommit.TreeHash, TreesStorage);
+            
+            var diff = DiffTrees(lastTree, currentTree);
+
+            if (diff.Added.Any())
+            {
+                Console.WriteLine("New files:");
+                foreach (var addEntry in diff.Added)
+                {
+                    Console.WriteLine(" + " + addEntry);
+                }
+                Console.WriteLine();
+            }
+            
+            if (diff.Modified.Any())
+            {
+                Console.WriteLine("Modified files:");
+                foreach (var entry in diff.Modified)
+                {
+                    Console.WriteLine(" * " + entry);
+                }
+                Console.WriteLine();
+            }
+            
+            if (diff.Removed.Any())
+            {
+                Console.WriteLine("Deleted files:");
+                foreach (var entry in diff.Removed)
+                {
+                    Console.WriteLine(" * " + entry);
+                }
+                Console.WriteLine();
+            }
         }
 
         private static async Task WriteLog(string[] args)

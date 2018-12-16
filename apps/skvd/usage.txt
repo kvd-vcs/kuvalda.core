@@ -5,6 +5,7 @@ high-level commands:
     checkout <chash>
     init
     commit [-m message]
+    status
     log [<chash>]
     
 
