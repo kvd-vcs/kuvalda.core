@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Kuvalda.Tree
 {
-    public class HashTableCreator
+    public class HashTableCreator : IHashTableCreator
     {
         private readonly IFileSystem _fs;
         private readonly Func<HashAlgorithm> _algorithmFactory;

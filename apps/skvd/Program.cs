@@ -202,7 +202,7 @@ namespace SimpleKvd.CLI
                 Console.WriteLine("Deleted files:");
                 foreach (var entry in diff.Removed)
                 {
-                    Console.WriteLine(" * " + entry);
+                    Console.WriteLine(" - " + entry);
                 }
                 Console.WriteLine();
             }

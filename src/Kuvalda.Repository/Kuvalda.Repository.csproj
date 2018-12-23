@@ -8,4 +8,8 @@
       <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Kuvalda.Tree\Kuvalda.Tree.csproj" />
+    </ItemGroup>
+
 </Project>

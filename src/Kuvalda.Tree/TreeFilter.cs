@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Kuvalda.Tree
 {
-    public class TreeFilter
+    public class TreeFilter : ITreeFilter
     {
         public const string IgnoreFileName = ".kvdignore";
 
