@@ -12,22 +12,15 @@ Task("Clean").Does(() =>
 
 Task("Build").Does(() =>
 {
-	var settings_repo = new DotNetCoreBuildSettings
+	
+	var settings = new DotNetCoreBuildSettings
 	{
 		Framework = "netcoreapp2.1",
 		Configuration = "Release",
-		OutputDirectory = "./artifacts/Kuvalda.Repository/"
+		OutputDirectory = "./artifacts/Kuvalda.Core"
 	};
 	
-	var settings_tree = new DotNetCoreBuildSettings
-	{
-		Framework = "netcoreapp2.1",
-		Configuration = "Release",
-		OutputDirectory = "./artifacts/Kuvalda.Tree"
-	};
-	
-	DotNetCoreBuild("./src/Kuvalda.Repository", settings_repo);
-	DotNetCoreBuild("./src/Kuvalda.Tree", settings_tree);
+	DotNetCoreBuild("./src/Kuvalda.Core", settings);
 });
 
 Task("PackNuget").Does(() =>
@@ -36,7 +29,7 @@ Task("PackNuget").Does(() =>
 	
 	NuGetPack("kuvalda.nuspec", new NuGetPackSettings()
 	{
-		Version = "0.1.0",
+		Version = "0.2.1",
 		BasePath = "./",
 		OutputDirectory = "./artifacts/nuget/",
 		NoPackageAnalysis = true

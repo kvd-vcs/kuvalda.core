@@ -448,16 +448,12 @@ namespace SimpleKvd.CLI
 
         private static async Task<IEnumerable<string>> SaveHashedBlobs(IDictionary<string, string> hashes)
         {
-            var saveTasks = new List<Task<string>>();
-
+            var result = new HashSet<string>();
             foreach (var hashRow in hashes)
             {
-                saveTasks.Add(SaveBlob(hashRow.Key, hashRow.Value));
+                result.Add(await SaveBlob(hashRow.Key, hashRow.Value));
             }
-
-            await Task.WhenAll(saveTasks);
-
-            return saveTasks.Select(t => t.Result);
+            return result;
         }
 
         private static async Task<string> SaveBlob(string path, string hashPredefined = null)

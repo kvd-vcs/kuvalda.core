@@ -147,5 +147,105 @@ namespace KuvaldaTests
                 }
             }, filtered);
         }
+        
+        [Test]
+        public async Task Test_ShouldIgnoreHierarchy()
+        {
+            // Arrange
+            var fs = new MockFileSystem(new Dictionary<string, MockFileData>
+            {
+                {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
+                {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/folder", new MockDirectoryData()},
+                {@"c:/folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/folder/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {$"c:/folder/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
+                {@"c:/deep_folder", new MockDirectoryData()},
+                {@"c:/deep_folder/deep_folder", new MockDirectoryData()},
+                {@"c:/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {$"c:/deep_folder/deep_folder/{TreeFilter.IgnoreFileName}", new MockFileData("^deep_folder$")},
+                {@"c:/deep_folder/deep_folder/deep_folder", new MockDirectoryData()},
+                {@"c:/deep_folder/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/deep_folder/deep_folder/deep_folder/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+            });
+            var filter = new TreeFilter(fs);
+            var tree = new TreeNodeFolder("")
+            {
+                Nodes = new TreeNode[]
+                {
+                    new TreeNodeFile("file1", DateTime.UnixEpoch),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFolder("folder")
+                    {
+                        Nodes = new []
+                        {
+                            new TreeNodeFile("file1", DateTime.UnixEpoch),
+                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                        }
+                    },
+                    new TreeNodeFolder("deep_folder")
+                    {
+                        Nodes = new TreeNode[]
+                        {
+                            new TreeNodeFile("file", DateTime.UnixEpoch),
+                            new TreeNodeFolder("deep_folder")
+                            {
+                                Nodes = new TreeNode[]
+                                {
+                                    new TreeNodeFile("file", DateTime.UnixEpoch),
+                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                                    new TreeNodeFolder("deep_folder")
+                                    {
+                                        Nodes = new []
+                                        {
+                                            new TreeNodeFile("file1", DateTime.UnixEpoch),
+                                            new TreeNodeFile("file", DateTime.UnixEpoch)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            // Act
+            var filtered = await filter.Filter(tree, "c:/");
+            
+            // Assert
+            Assert.AreEqual(new TreeNodeFolder("")
+            {
+                Nodes = new TreeNode[]
+                {
+                    new TreeNodeFile("file1", DateTime.UnixEpoch),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFolder("folder")
+                    {
+                        Nodes = new []
+                        {
+                            new TreeNodeFile("file1", DateTime.UnixEpoch),
+                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                        }
+                    },
+                    new TreeNodeFolder("deep_folder")
+                    {
+                        Nodes = new TreeNode[]
+                        {
+                            new TreeNodeFile("file", DateTime.UnixEpoch),
+                            new TreeNodeFolder("deep_folder")
+                            {
+                                Nodes = new TreeNode[]
+                                {
+                                    new TreeNodeFile("file", DateTime.UnixEpoch),
+                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                                }
+                            }
+                        }
+                    }
+                }
+            }, filtered);
+        }
+
     }
 }

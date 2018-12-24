@@ -1,4 +1,4 @@
-^.git
-.idea
+\.git
+\.idea
 artifacts
 tools

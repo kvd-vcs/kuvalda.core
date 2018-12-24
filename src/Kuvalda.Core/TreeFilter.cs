@@ -37,24 +37,34 @@ namespace Kuvalda.Core
             {
                 result.Nodes = result.Nodes.Where(t => !PredefinedIgnores.Contains(t.Name)).ToList();
             }
-            
-            if (result.Nodes.Any(f => f.Name == IgnoreFileName))
+
+            if (result.Nodes.All(f => f.Name != IgnoreFileName))
             {
-                var ignores = (await ReadAllTextAsync(_fileSystem.Path.Combine(contextPath, IgnoreFileName)))
-                    .Select(s => new Regex(s));
+                var filteredWithoutIgnore = result.Nodes
+                    .Select(async entry => await Filter(entry, contextPath))
+                    .ToList();
+
+                await Task.WhenAll(filteredWithoutIgnore);
+
+                result.Nodes = filteredWithoutIgnore.Select(task => task.Result).ToList();
                 
-                var filteredTasks = result.Nodes
-                    .Where(entry => !ignores.Any(matcher => matcher.IsMatch(entry.Name)))
-                    .Select(async entry => await Filter(entry, contextPath));
-
-                await Task.WhenAll(filteredTasks);
-
-                result.Nodes = filteredTasks.Select(task => task.Result);
-
                 return result;
             }
+            
+            var ignores = (await ReadAllTextAsync(_fileSystem.Path.Combine(contextPath, IgnoreFileName)))
+                .Select(s => new Regex(s));
+                
+            var filteredTasks = result.Nodes
+                .Where(entry => !ignores.Any(matcher => matcher.IsMatch(entry.Name)))
+                .Select(async entry => await Filter(entry, contextPath))
+                .ToList();
+
+            await Task.WhenAll(filteredTasks);
+
+            result.Nodes = filteredTasks.Select(task => task.Result).ToList();
 
             return result;
+
         }
 
         private async Task<string[]> ReadAllTextAsync(string path)
