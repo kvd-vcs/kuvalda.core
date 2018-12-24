@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Runtime.InteropServices.ComTypes;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using CommandDotNet;
-using Kuvalda.Repository;
-using Kuvalda.Tree;
-using Kuvalda.Tree.Data;
+using Kuvalda.Core;
+using Kuvalda.Core.Data;
 using Newtonsoft.Json;
 
 namespace SimpleKvd.CLI

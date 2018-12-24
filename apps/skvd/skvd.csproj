@@ -8,13 +8,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Kuvalda.Repository\Kuvalda.Repository.csproj" />
-      <ProjectReference Include="..\..\src\Kuvalda.Tree.Data\Kuvalda.Tree.Data.csproj" />
-      <ProjectReference Include="..\..\src\Kuvalda.Tree\Kuvalda.Tree.csproj" />
+      <ProjectReference Include="..\..\src\Kuvalda.Core\Kuvalda.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="CommandDotNet" Version="2.7.5" />
       <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-27212-02" />
       <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
       <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />

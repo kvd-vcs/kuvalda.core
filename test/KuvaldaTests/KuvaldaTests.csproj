@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Kuvalda.Tree\Kuvalda.Tree.csproj" />
+      <ProjectReference Include="..\..\src\Kuvalda.Core\Kuvalda.Core.csproj" />
     </ItemGroup>
 
 </Project>

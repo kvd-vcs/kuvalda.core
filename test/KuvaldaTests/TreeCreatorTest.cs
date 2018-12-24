@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Abstractions.TestingHelpers;
 using System.Threading.Tasks;
-using Kuvalda.Tree;
+using Kuvalda.Core;
 using NUnit.Framework;
 
 namespace KuvaldaTests

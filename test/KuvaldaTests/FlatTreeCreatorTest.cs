@@ -1,6 +1,6 @@
 using System;
 using System.Linq;
-using Kuvalda.Tree;
+using Kuvalda.Core;
 using NUnit.Framework;
 
 namespace KuvaldaTests

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO.Abstractions.TestingHelpers;
 using System.Threading.Tasks;
-using Kuvalda.Tree;
+using Kuvalda.Core;
 using NUnit.Framework;
 
 namespace KuvaldaTests
@@ -42,7 +42,7 @@ namespace KuvaldaTests
             {
                 {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
                 {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("[\"^file$\"]")},
+                {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
             });
             var filter = new TreeFilter(fs);
             var tree = new TreeNodeFolder("")
@@ -115,7 +115,7 @@ namespace KuvaldaTests
             {
                 {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
                 {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("[\"^file$\"]")},
+                {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
             });
             
             var filter = new TreeFilter(fs);
