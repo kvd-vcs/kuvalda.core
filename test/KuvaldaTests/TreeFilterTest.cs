@@ -23,7 +23,7 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file", DateTime.UnixEpoch), 
+                    new TreeNodeFile("file", DateTime.Today), 
                 }
             };
             
@@ -40,8 +40,8 @@ namespace KuvaldaTests
             // Arrange
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
                 {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
             });
             var filter = new TreeFilter(fs);
@@ -49,9 +49,9 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file", DateTime.UnixEpoch),
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFile("file", DateTime.Today),
+                    new TreeNodeFile("file1", DateTime.Today),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                 }
             };
             
@@ -63,8 +63,8 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFile("file1", DateTime.Today),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                 }
             }, filtered);
         }
@@ -75,8 +75,8 @@ namespace KuvaldaTests
             // Arrange
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
             });
             
             var filter = new TreeFilter(fs);
@@ -89,8 +89,8 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file", DateTime.UnixEpoch),
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
+                    new TreeNodeFile("file", DateTime.Today),
+                    new TreeNodeFile("file1", DateTime.Today),
                 }
             };
             
@@ -102,7 +102,7 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file", DateTime.UnixEpoch),
+                    new TreeNodeFile("file", DateTime.Today),
                 }
             }, filtered);
         }
@@ -113,8 +113,8 @@ namespace KuvaldaTests
             // Arrange
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
-                {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
                 {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
             });
             
@@ -128,9 +128,9 @@ namespace KuvaldaTests
             {
                 Nodes = new []
                 {
-                    new TreeNodeFile("file", DateTime.UnixEpoch),
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFile("file", DateTime.Today),
+                    new TreeNodeFile("file1", DateTime.Today),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                 }
             };
 
@@ -143,7 +143,7 @@ namespace KuvaldaTests
             {
                 Nodes = new List<TreeNode>
                 {
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today)
                 }
             }, filtered);
         }
@@ -155,52 +155,52 @@ namespace KuvaldaTests
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
                 {$"c:/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
-                {@"c:/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
                 {@"c:/folder", new MockDirectoryData()},
-                {@"c:/folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/folder/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/folder/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/folder/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
                 {$"c:/folder/{TreeFilter.IgnoreFileName}", new MockFileData("^file$")},
                 {@"c:/deep_folder", new MockDirectoryData()},
                 {@"c:/deep_folder/deep_folder", new MockDirectoryData()},
-                {@"c:/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
                 {$"c:/deep_folder/deep_folder/{TreeFilter.IgnoreFileName}", new MockFileData("^deep_folder$")},
                 {@"c:/deep_folder/deep_folder/deep_folder", new MockDirectoryData()},
-                {@"c:/deep_folder/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
-                {@"c:/deep_folder/deep_folder/deep_folder/file1", new MockFileData("") {LastWriteTime = DateTimeOffset.UnixEpoch}},
+                {@"c:/deep_folder/deep_folder/deep_folder/file", new MockFileData("") {LastWriteTime = DateTime.Today}},
+                {@"c:/deep_folder/deep_folder/deep_folder/file1", new MockFileData("") {LastWriteTime = DateTime.Today}},
             });
             var filter = new TreeFilter(fs);
             var tree = new TreeNodeFolder("")
             {
                 Nodes = new TreeNode[]
                 {
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFile("file1", DateTime.Today),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                     new TreeNodeFolder("folder")
                     {
                         Nodes = new []
                         {
-                            new TreeNodeFile("file1", DateTime.UnixEpoch),
-                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                            new TreeNodeFile("file1", DateTime.Today),
+                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today)
                         }
                     },
                     new TreeNodeFolder("deep_folder")
                     {
                         Nodes = new TreeNode[]
                         {
-                            new TreeNodeFile("file", DateTime.UnixEpoch),
+                            new TreeNodeFile("file", DateTime.Today),
                             new TreeNodeFolder("deep_folder")
                             {
                                 Nodes = new TreeNode[]
                                 {
-                                    new TreeNodeFile("file", DateTime.UnixEpoch),
-                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                                    new TreeNodeFile("file", DateTime.Today),
+                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                                     new TreeNodeFolder("deep_folder")
                                     {
                                         Nodes = new []
                                         {
-                                            new TreeNodeFile("file1", DateTime.UnixEpoch),
-                                            new TreeNodeFile("file", DateTime.UnixEpoch)
+                                            new TreeNodeFile("file1", DateTime.Today),
+                                            new TreeNodeFile("file", DateTime.Today)
                                         }
                                     }
                                 }
@@ -218,27 +218,27 @@ namespace KuvaldaTests
             {
                 Nodes = new TreeNode[]
                 {
-                    new TreeNodeFile("file1", DateTime.UnixEpoch),
-                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch),
+                    new TreeNodeFile("file1", DateTime.Today),
+                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today),
                     new TreeNodeFolder("folder")
                     {
                         Nodes = new []
                         {
-                            new TreeNodeFile("file1", DateTime.UnixEpoch),
-                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                            new TreeNodeFile("file1", DateTime.Today),
+                            new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today)
                         }
                     },
                     new TreeNodeFolder("deep_folder")
                     {
                         Nodes = new TreeNode[]
                         {
-                            new TreeNodeFile("file", DateTime.UnixEpoch),
+                            new TreeNodeFile("file", DateTime.Today),
                             new TreeNodeFolder("deep_folder")
                             {
                                 Nodes = new TreeNode[]
                                 {
-                                    new TreeNodeFile("file", DateTime.UnixEpoch),
-                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.UnixEpoch)
+                                    new TreeNodeFile("file", DateTime.Today),
+                                    new TreeNodeFile(TreeFilter.IgnoreFileName, DateTime.Today)
                                 }
                             }
                         }

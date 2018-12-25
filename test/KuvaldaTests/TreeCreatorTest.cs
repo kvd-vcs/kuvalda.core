@@ -16,7 +16,7 @@ namespace KuvaldaTests
             // Arrange
             var file = new MockFileData("content")
             {
-                LastWriteTime = DateTimeOffset.UnixEpoch
+                LastWriteTime = DateTime.Today
             };
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
@@ -30,7 +30,7 @@ namespace KuvaldaTests
             
             // Assert
             Assert.AreEqual(
-                new TreeNodeFolder("") {Nodes = new[] {new TreeNodeFile("file", file.LastWriteTime.DateTime)}}, tree);
+                new TreeNodeFolder("") {Nodes = new[] {new TreeNodeFile("file", DateTime.Today.ToUniversalTime())}}, tree);
         }
         
         [Test]
@@ -59,11 +59,11 @@ namespace KuvaldaTests
             // Arrange
             var file = new MockFileData("content")
             {
-                LastWriteTime = DateTimeOffset.UnixEpoch
+                LastWriteTime = DateTime.Today
             };
             var file1 = new MockFileData("content2")
             {
-                LastWriteTime = DateTimeOffset.UnixEpoch
+                LastWriteTime = DateTime.Today
             };
             var fs = new MockFileSystem(new Dictionary<string, MockFileData>
             {
@@ -82,8 +82,8 @@ namespace KuvaldaTests
                 {
                     Nodes = new[]
                     {
-                        new TreeNodeFile("file", file.LastWriteTime.DateTime),
-                        new TreeNodeFile("file1", file.LastWriteTime.DateTime)
+                        new TreeNodeFile("file", DateTime.Today.ToUniversalTime()),
+                        new TreeNodeFile("file1", DateTime.Today.ToUniversalTime())
                     }
                 }, tree);
         }

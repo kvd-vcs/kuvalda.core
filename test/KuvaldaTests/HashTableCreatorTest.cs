@@ -41,7 +41,7 @@ namespace KuvaldaTests
             });
             var flatTree = new[]
             {
-                new FlatTreeItem("file", new TreeNodeFile("file", DateTime.UnixEpoch)),
+                new FlatTreeItem("file", new TreeNodeFile("file", DateTime.Today)),
             };
             var hashCreator = new HashTableCreator(fs, () => new SHA1Managed());
             

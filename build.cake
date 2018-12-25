@@ -15,7 +15,7 @@ Task("Build").Does(() =>
 	
 	var settings = new DotNetCoreBuildSettings
 	{
-		Framework = "netcoreapp2.1",
+		Framework = "netstandard2.0",
 		Configuration = "Release",
 		OutputDirectory = "./artifacts/Kuvalda.Core"
 	};
@@ -29,7 +29,7 @@ Task("PackNuget").Does(() =>
 	
 	NuGetPack("kuvalda.nuspec", new NuGetPackSettings()
 	{
-		Version = "0.2.1",
+		Version = "0.2.2",
 		BasePath = "./",
 		OutputDirectory = "./artifacts/nuget/",
 		NoPackageAnalysis = true
@@ -40,7 +40,7 @@ Task("Test").Does(() =>
 {
 	var settings = new DotNetCoreTestSettings
 	{
-		Framework = "netcoreapp2.1",
+		Framework = "netcoreapp2.0",
 		Configuration = "Release",
 		OutputDirectory = "./artifacts/tests/"
 	};
