@@ -1,7 +1,4 @@
-language: csharp
-sudo: required
-dist: trusty
-mono: 5.10.0
-dotnet: 2.1.300
+language: shell
+os: windows
 script:  
-  - ./build.sh --target "Travis"
+  - powershell -ExecutionPolicy Bypass -File "build.ps1"

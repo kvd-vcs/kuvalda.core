@@ -1,5 +1,5 @@
 
-var target = Argument("target", "Default");
+var target = Argument("target", "BuildTest");
 
 //////////////////////////////////////////////////////////////////////
 // BUILD TASK
@@ -52,7 +52,7 @@ Task("Test").Does(() =>
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
 
-Task("Travis")
+Task("BuildTest")
     .IsDependentOn("Build")
     .IsDependentOn("Test");
 
