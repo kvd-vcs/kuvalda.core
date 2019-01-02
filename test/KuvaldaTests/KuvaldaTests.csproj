@@ -4,10 +4,13 @@
         <TargetFramework>netcoreapp2.0</TargetFramework>
 
         <IsPackable>false</IsPackable>
+
+        <AssemblyName>KuvaldaUnitTests</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+        <PackageReference Include="Moq" Version="4.10.1" />
         <PackageReference Include="NUnit" Version="3.11.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="3.12.0" />
         <PackageReference Include="System.IO.Abstractions" Version="3.0.2" />
