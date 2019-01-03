@@ -34,10 +34,10 @@ namespace Kuvalda.Core
             
             foreach (var commitHash in commit.Hashes)
             {
-                var filePath = _fileSystem.Path.Combine(commit.Path, commitHash.Value);
+                var filePath = _fileSystem.Path.Combine(commit.Path, commitHash.Key);
                 using (var file = _fileSystem.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    waitStoreTasks.Add(Task.Run(() => _blobStorage.Set(commitHash.Key, file)));
+                    waitStoreTasks.Add(Task.Run(() => _blobStorage.Set(commitHash.Value, file)));
                 }
             }
 
@@ -45,9 +45,8 @@ namespace Kuvalda.Core
 
             commit.Commit.HashesAddress = hhash;
             commit.Commit.TreeHash = thash;
-            
-            return await _commitStorage.Store(commit.Commit);
 
+            return await _commitStorage.Store(commit.Commit);
         }
     }
 }
