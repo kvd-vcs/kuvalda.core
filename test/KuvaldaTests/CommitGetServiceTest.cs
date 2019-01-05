@@ -10,7 +10,6 @@ namespace KuvaldaTests
     [TestFixture]
     public class CommitGetServiceTest
     {
-
         private ICommitGetService _commitGetService;
         
         private Mock<IEntityObjectStorage<CommitModel>> _commitStorageMock;
