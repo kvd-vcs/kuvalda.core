@@ -1,44 +1,76 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Kuvalda.Core.Checkout;
+using Kuvalda.Core.Status;
 
 namespace Kuvalda.Core
 {
     public class RepositoryFacade : IRepositoryFacade
     {
-        public readonly IEntityObjectStorage<CommitModel> CommitStorage;
-        public readonly IEntityObjectStorage<TreeNode> TreeStorage;
-        public readonly IEntityObjectStorage<IDictionary<string, string>> HashStorage;
-        public readonly IRefsStorage RefsStorage;
+        public static string DefaultMessageLabel = "message";
+        
+        public string MessageLabel { get; set; } = DefaultMessageLabel;
+        
+        
+        private readonly IRepositoryInitializeService _initializeService;
+        private readonly ICommitServiceFacade _commitService;
+        private readonly IRefsService _refsService;
+        private readonly ICheckoutService _checkoutService;
+        private readonly IStatusService _statusService;
 
-        public RepositoryFacade(IEntityObjectStorage<CommitModel> commitStorage,
-            IEntityObjectStorage<TreeNode> treeStorage,
-            IEntityObjectStorage<IDictionary<string, string>> hashStorage,
-            IRefsStorage refsStorage)
+        public RepositoryFacade(IRepositoryInitializeService initializeService, ICommitServiceFacade commitService,
+            IRefsService refsService, ICheckoutService checkoutService, IStatusService statusService)
         {
-            CommitStorage = commitStorage;
-            TreeStorage = treeStorage;
-            HashStorage = hashStorage;
-            RefsStorage = refsStorage;
+            _initializeService = initializeService;
+            _commitService = commitService;
+            _refsService = refsService;
+            _checkoutService = checkoutService;
+            _statusService = statusService;
         }
 
-        public Task Initialize()
+
+        public bool IsInitialized()
         {
-            throw new System.NotImplementedException();
+            return _initializeService.IsInitialized();
         }
 
-        public Task<CommitResult> Commit(CommitOptions options)
+        public async Task Initialize()
         {
-            throw new System.NotImplementedException();
+            await _initializeService.Initialize();
         }
 
-        public Task<CheckoutResult> Checkout(CheckoutOptions options)
+        public async Task<CommitResult> Commit(CommitOptions options)
         {
-            throw new System.NotImplementedException();
+            var currentChash = _refsService.GetHeadCommit();
+            var commitData = await _commitService.CreateCommit(options.Path, currentChash);
+            commitData.Commit.Labels[MessageLabel] = options.Message;
+            var chash = await _commitService.StoreCommit(commitData);
+            
+            return new CommitResult()
+            {
+                Chash = chash
+            };
         }
 
-        public Task<StatusResult> GetStatus()
+        public async Task<CheckoutResult> Checkout(CheckoutOptions options)
         {
-            throw new System.NotImplementedException();
+            var result = await _checkoutService.Checkout(options.CommitHash);
+            return new CheckoutResult()
+            {
+                Added = result.Added,
+                Removed = result.Removed,
+                Modified = result.Modified
+            };
+        }
+
+        public async Task<StatusResult> GetStatus()
+        {
+            var result = await _statusService.GetStatus(_refsService.GetHeadCommit());
+            return new StatusResult()
+            {
+                Added = result.Added,
+                Removed = result.Removed,
+                Modified = result.Modified
+            };
         }
     }
 }

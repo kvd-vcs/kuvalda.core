@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -19,16 +20,24 @@ namespace Kuvalda.Core
             _hashesFactory = hashesFactory;
         }
 
-        public async Task<CommitDto> CreateCommit(string path, string prevChash)
+        public async Task<CommitDto> CreateCommit(string path, string prevChash = null)
         {
             var tree = await _treeCreator.Create(path);
-            var prevCommit = await _commitStorage.Get(prevChash);
+            TreeNode prevTree = new TreeNodeFolder("");
+            var parentChashes = new string[0];
 
-            var hashes = await _hashesFactory.CreateHashes(await _treeStorage.Get(prevCommit.TreeHash), tree);
+            if (!string.IsNullOrEmpty(prevChash))
+            {
+                var prevCommit = await _commitStorage.Get(prevChash);
+                prevTree = await _treeStorage.Get(prevCommit.TreeHash);
+                parentChashes = new[] {prevChash};
+            }
+
+            var hashes = await _hashesFactory.CreateHashes(prevTree, tree);
 
             var commitObject = new CommitModel()
             {
-                Parents = new[] {prevChash},
+                Parents = parentChashes,
                 Labels = new Dictionary<string, string>(),
                 HashesAddress = null,
                 TreeHash = null,

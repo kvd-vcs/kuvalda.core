@@ -30,7 +30,7 @@ namespace KuvaldaTests
         }
 
         [Test]
-        public async Task Test_Get_ShouldCreateCommitData()
+        public async Task Test_Create_ShouldCreateCommitDataWithParent()
         {
             // Arrange
             var chashPrev = "ca39a3ee5e6b4b0d3255bfef95601890afd80709";
@@ -49,6 +49,28 @@ namespace KuvaldaTests
             
             // Act
             var result = await _commitCreateService.CreateCommit("/", chashPrev);
+            
+            // Assert
+            Assert.NotNull(result);
+            
+            Assert.AreEqual("/", result.Path);
+            Assert.AreEqual(currentNode, result.Tree);
+            Assert.AreEqual(hashes, result.Hashes);
+        }
+        
+        [Test]
+        public async Task Test_Create_ShouldCreateCommitDataWithoutParent()
+        {
+            // Arrange
+            TreeNode currentNode = new TreeNodeFile("file", DateTime.Now);
+            IDictionary<string, string> hashes = new Dictionary<string, string>();
+            
+            _treeCreatorMock.Setup(s => s.Create("/")).Returns(Task.FromResult(currentNode));
+            _hashesFactoryMock.Setup(s => s.CreateHashes(It.IsAny<TreeNodeFolder>(), currentNode))
+                .Returns(Task.FromResult(hashes));
+            
+            // Act
+            var result = await _commitCreateService.CreateCommit("/");
             
             // Assert
             Assert.NotNull(result);

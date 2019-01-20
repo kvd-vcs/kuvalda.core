@@ -1,6 +1,6 @@
 namespace Kuvalda.Core
 {
-    public interface IRefsStorage
+    public interface IRefsService
     {
         bool Exists(string name);
         string Get(string name);
