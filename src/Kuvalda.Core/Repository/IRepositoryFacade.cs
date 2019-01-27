@@ -8,12 +8,12 @@ namespace Kuvalda.Core
         ///     Return repository initialize status
         /// </summary>
         /// <returns> Initialization status </returns>
-        bool IsInitialized();
+        bool IsInitialized(string path);
         
         /// <summary>
         ///     Initialize the repository
         /// </summary>
-        Task Initialize();
+        Task Initialize(string path);
         
         /// <summary>
         ///     Create commit to repository with options

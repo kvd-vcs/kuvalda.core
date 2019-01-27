@@ -20,9 +20,14 @@ namespace Kuvalda.Core
             _hashesFactory = hashesFactory;
         }
 
-        public async Task<CommitDto> CreateCommit(string path, string prevChash = null)
+        public async Task<CommitDto> CreateCommit(string path = null, string prevChash = null)
         {
-            var tree = await _treeCreator.Create(path);
+            TreeNode tree = new TreeNodeFolder("");
+            if (!string.IsNullOrEmpty(path))
+            {
+                tree = await _treeCreator.Create(path);
+            }
+
             TreeNode prevTree = new TreeNodeFolder("");
             var parentChashes = new string[0];
 

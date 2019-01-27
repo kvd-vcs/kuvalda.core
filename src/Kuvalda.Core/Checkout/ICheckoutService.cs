@@ -4,6 +4,6 @@ namespace Kuvalda.Core.Checkout
 {
     public interface ICheckoutService
     {
-        Task<DifferenceEntries> Checkout(string chash);
+        Task<DifferenceEntries> Checkout(string path, string chash);
     }
 }

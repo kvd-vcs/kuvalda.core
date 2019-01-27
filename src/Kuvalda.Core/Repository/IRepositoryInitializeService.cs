@@ -4,7 +4,7 @@ namespace Kuvalda.Core
 {
     public interface IRepositoryInitializeService
     {
-        bool IsInitialized();
-        Task Initialize();
+        bool IsInitialized(string path);
+        Task Initialize(string path);
     }
 }
