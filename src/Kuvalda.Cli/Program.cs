@@ -6,7 +6,7 @@ using System.Linq;
 using Kuvalda.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Serilog.Core;
+using Serilog;
 
 namespace Kuvalda.Cli
 {
@@ -14,22 +14,25 @@ namespace Kuvalda.Cli
     {
         static void Main(string[] args)
         {
-            var services = ConfigureServices(args);
+            ConfigureServices(args).GetService<IStartup>().Run(args);
         }
 
-        private static object ConfigureServices(string[] args)
+        private static IServiceProvider ConfigureServices(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .CreateLogger();
+            
             var serviceCollection = new ServiceCollection();
+
+            serviceCollection.AddTransient<IStartup, Startup>();
             
             AddConfiguration(args, serviceCollection);
 
-            serviceCollection.AddTransient<IFileSystem, FileSystem>();
-            
-            var logger = new Logger()
-            
-            serviceCollection.AddTransient<IRepositoryInitializeService, RepositoryInitializeService>();
-            
-            serviceCollection.AddSingleton<IRepositoryFacade, RepositoryFacade>();
+            serviceCollection.AddTransient<IFileSystem, FileSystem>()
+                .AddLogging(builder => builder.AddSerilog())
+                .AddTransient<IRepositoryInitializeService, RepositoryInitializeService>()
+                .AddSingleton<IRepositoryFacade, RepositoryFacade>();
             
             return serviceCollection.BuildServiceProvider();
         }
