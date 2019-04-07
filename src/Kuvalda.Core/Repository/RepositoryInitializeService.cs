@@ -26,13 +26,13 @@ namespace Kuvalda.Core
 
         public bool IsInitialized(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemName);
+            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
             return _fileSystem.File.Exists(systemFolderPath);
         }
         
         public async Task Initialize(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemName);
+            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
             if (_fileSystem.Directory.Exists(systemFolderPath))
             {
                 _logger.Warning("Try initialize alredy initialized repository at path {RepositoryPath}", path);
