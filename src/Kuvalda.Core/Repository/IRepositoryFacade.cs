@@ -34,5 +34,10 @@ namespace Kuvalda.Core
         /// </summary>
         /// <returns> status of repo </returns>
         Task<StatusResult> GetStatus(StatusOptions options);
+
+        /// <summary>
+        ///     Returns log entries from commit or reference
+        /// </summary>
+        Task<LogResult> GetLog(LogOptions option);
     }
 }

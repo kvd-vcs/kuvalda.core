@@ -80,7 +80,8 @@ namespace Kuvalda.Cli
                 .AddTransient<ICommitGetService, CommitGetService>()
                 .AddTransient<ICheckoutService, CheckoutService>()
                 .AddTransient<IStatusService, StatusService>()
-                .AddTransient<IHashTableCreator, HashTableCreator>();
+                .AddTransient<IHashTableCreator, HashTableCreator>()
+                .AddTransient<ILogService, LogService>();
 
 
             InitCommands(serviceCollection);
@@ -92,6 +93,7 @@ namespace Kuvalda.Cli
                 ["status"] = ctx.GetRequiredService<StatusCommand>(),
                 ["commit"] = ctx.GetRequiredService<CommitCommand>(),
                 ["checkout"] = ctx.GetRequiredService<CheckoutCommand>(),
+                ["log"] = ctx.GetRequiredService<LogCommand>(),
             });
             
             return serviceCollection.BuildServiceProvider();
@@ -103,6 +105,7 @@ namespace Kuvalda.Cli
                 .AddTransient<InitCommand>()
                 .AddTransient<StatusCommand>()
                 .AddTransient<CommitCommand>()
+                .AddTransient<LogCommand>()
                 .AddTransient<CheckoutCommand>();
         }
 

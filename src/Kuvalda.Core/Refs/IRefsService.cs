@@ -4,6 +4,7 @@ namespace Kuvalda.Core
     {
         bool Exists(string name);
         Reference Get(string name);
+        string GetCommit(string name);
         void Store(string name, Reference reference);
         Reference GetHead();
         string GetHeadCommit();

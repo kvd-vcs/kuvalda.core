@@ -33,6 +33,28 @@ namespace Kuvalda.Core
 
             return reference;
         }
+        
+        public string GetCommit(string name)
+        {
+            var reference = GetInternal(name);
+            
+            if (reference is EmptyReference)
+            {
+                throw new InvalidDataException($"Reference {name} is empty");
+            }
+
+            if (reference is CommitReference)
+            {
+                return reference.Value;
+            }
+            
+            if (reference is PointerReference)
+            {
+                return GetCommit(reference.Value);
+            }
+
+            return reference.Value;
+        }
 
         public void Store(string name, Reference value)
         {

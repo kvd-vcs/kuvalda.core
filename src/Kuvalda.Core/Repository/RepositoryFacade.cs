@@ -12,10 +12,11 @@ namespace Kuvalda.Core
         private readonly IRefsService _refsService;
         private readonly ICheckoutService _checkoutService;
         private readonly IStatusService _statusService;
+        private readonly ILogService _logService;
 
         public RepositoryFacade(IRepositoryInitializeService initializeService, ICommitServiceFacade commitService,
             IRefsService refsService, ICheckoutService checkoutService, IStatusService statusService,
-            RepositoryOptions repositoryOptions)
+            RepositoryOptions repositoryOptions, ILogService logService)
         {
             _initializeService = initializeService;
             _commitService = commitService;
@@ -23,6 +24,7 @@ namespace Kuvalda.Core
             _checkoutService = checkoutService;
             _statusService = statusService;
             _repositoryOptions = repositoryOptions;
+            _logService = logService;
         }
 
 
@@ -70,6 +72,11 @@ namespace Kuvalda.Core
                 Removed = result.Removed,
                 Modified = result.Modified
             };
+        }
+
+        public async Task<LogResult> GetLog(LogOptions options)
+        {
+            return await _logService.GetLog(options);
         }
     }
 }
