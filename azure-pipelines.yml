@@ -9,3 +9,7 @@ steps:
     command: 'build'
     arguments: '-c Release'
 
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: 'test'
