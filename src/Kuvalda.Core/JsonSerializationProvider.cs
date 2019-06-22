@@ -22,6 +22,7 @@ namespace Kuvalda.Core
             var data = JsonConvert.SerializeObject(entity, Formatting.Indented);
             var writer = new StreamWriter(stream);
             writer.Write(data);
+            writer.Flush();
         }
 
         public T Deserialize<T>(Stream stream)

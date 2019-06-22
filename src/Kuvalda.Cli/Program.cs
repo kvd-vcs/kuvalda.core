@@ -48,7 +48,7 @@ namespace Kuvalda.Cli
                     var filesystem = ctx.GetRequiredService<IFileSystem>();
                     var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
                         ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder);
-                    return new FileSystemObjectStorage(filesystem, path);
+                    return new FileSystemObjectStorage(filesystem, path + "/objects");
                 })
                 .AddTransient<ISerializationProvider, JsonSerializationProvider>()
                 .AddTransient<IHashComputeProvider, SHA2HashComputeProvider>()
@@ -68,7 +68,8 @@ namespace Kuvalda.Cli
                 .AddTransient<ICommitServiceFacade, CommitServiceFacade>()
                 .AddTransient<ICommitGetService, CommitGetService>()
                 .AddTransient<ICheckoutService, CheckoutService>()
-                .AddTransient<IStatusService, StatusService>();
+                .AddTransient<IStatusService, StatusService>()
+                .AddTransient<IHashTableCreator, HashTableCreator>();
 
 
             InitCommands(serviceCollection);

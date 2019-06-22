@@ -11,9 +11,11 @@ namespace Kuvalda.Core
         public readonly IFlatTreeCreator FlatTreeCreator;
         public readonly IHashTableCreator HashTableCreator;
 
-        public HashModificationFactory(IDifferenceEntriesCreator differ)
+        public HashModificationFactory(IDifferenceEntriesCreator differ, IFlatTreeCreator flatTreeCreator, IHashTableCreator hashTableCreator)
         {
             Differ = differ;
+            FlatTreeCreator = flatTreeCreator;
+            HashTableCreator = hashTableCreator;
         }
 
         public async Task<IDictionary<string, string>> CreateHashes(TreeNode lTree, TreeNode rTree)

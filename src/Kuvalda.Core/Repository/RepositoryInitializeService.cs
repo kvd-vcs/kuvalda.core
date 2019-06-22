@@ -40,7 +40,8 @@ namespace Kuvalda.Core
             }
 
             _fileSystem.Directory.CreateDirectory(systemFolderPath);
-            _fileSystem.File.Create(_fileSystem.Path.Combine(systemFolderPath, _options.HeadFilePath));
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(systemFolderPath, "refs"));
+            _fileSystem.File.Create(_fileSystem.Path.Combine(systemFolderPath, "refs", _options.HeadFilePath));
             
             _logger.Information("Create repository system folder at {RepositoryPath}", systemFolderPath);
 

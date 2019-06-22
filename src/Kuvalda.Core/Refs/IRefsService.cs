@@ -88,7 +88,7 @@ namespace Kuvalda.Core
         public void Store(string name, Reference value)
         {
             var prefix = value is PointerReference ? "ref" : "commit";
-            var format = $"{prefix}:{value}";
+            var format = $"{prefix}:{value.Value}";
             FileSyste.File.WriteAllText(FileSyste.Path.Combine(SystemPath, "refs", name), format);
         }
 
