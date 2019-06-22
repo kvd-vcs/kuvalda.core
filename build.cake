@@ -1,3 +1,4 @@
+#addin nuget:?package=Cake.Git
 
 var target = Argument("target", "BuildTest");
 
@@ -29,7 +30,7 @@ Task("PackNuget").Does(() =>
 	
 	NuGetPack("kuvalda.nuspec", new NuGetPackSettings()
 	{
-		Version = "0.2.2",
+		Version = GitDescribe("./", GitDescribeStrategy.Default),
 		BasePath = "./",
 		OutputDirectory = "./artifacts/nuget/",
 		NoPackageAnalysis = true
@@ -47,7 +48,8 @@ Task("Test").Does(() =>
 
 	DotNetCoreTest("./test/KuvaldaTests", settings);
 });
- 
+
+
 //////////////////////////////////////////////////////////////////////
 // TASK TARGETS
 //////////////////////////////////////////////////////////////////////
