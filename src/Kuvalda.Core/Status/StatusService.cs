@@ -30,7 +30,7 @@ namespace Kuvalda.Core.Status
             var targetCommit = await _commitStorage.Get(chash);
             var targetTree = await _treeStorage.Get(targetCommit.TreeHash);
 
-            var diff = _differenceEntries.Create(tree, targetTree);
+            var diff = _differenceEntries.Create(targetTree, tree);
 
             return diff;
         }
