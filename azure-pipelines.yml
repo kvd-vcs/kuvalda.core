@@ -7,4 +7,5 @@ steps:
   displayName: Build
   inputs:
     command: 'build'
+    arguments: '-c Release'
 
