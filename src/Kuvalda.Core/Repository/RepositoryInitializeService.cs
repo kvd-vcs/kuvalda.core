@@ -49,8 +49,8 @@ namespace Kuvalda.Core
             
             _logger.Information("Create init commit with chash {InitChash}", initChash);
 
-            _refsService.Store(_options.DefaultBranchName, initChash);
-            _refsService.SetHeadRef(_options.DefaultBranchName);
+            _refsService.Store(_options.DefaultBranchName, new CommitReference(initChash));
+            _refsService.SetHead(new PointerReference(_options.DefaultBranchName));
             
             _logger.Information("Write init chash to default ref with name {DefaultBranchName}", _options.DefaultBranchName);
         }

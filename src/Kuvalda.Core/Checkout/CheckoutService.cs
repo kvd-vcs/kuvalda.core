@@ -50,7 +50,7 @@ namespace Kuvalda.Core.Checkout
 
             await ModifyFiles(path, diff, hashes, flatTargetTree);
 
-            _refsService.SetHeadCommit(chash);
+            _refsService.SetHead(new CommitReference(chash));
 
             return diff;
         }

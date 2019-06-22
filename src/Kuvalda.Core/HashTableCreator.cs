@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO.Abstractions;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Kuvalda.Core
@@ -12,54 +9,34 @@ namespace Kuvalda.Core
     public class HashTableCreator : IHashTableCreator
     {
         private readonly IFileSystem _fs;
-        private readonly Func<HashAlgorithm> _algorithmFactory;
+        private readonly IHashComputeProvider _hasher;
 
-        public HashTableCreator(IFileSystem fs, Func<HashAlgorithm> algorithmFactory)
+        public HashTableCreator(IFileSystem fs, IHashComputeProvider hasher)
         {
-            if (fs == null)
-            {
-                throw new ArgumentNullException(nameof(fs));
-            }
-            
-            if (algorithmFactory == null)
-            {
-                throw new ArgumentNullException(nameof(algorithmFactory));
-            }
-            
-            _fs = fs;
-            _algorithmFactory = algorithmFactory;
+            _fs = fs ?? throw new ArgumentNullException(nameof(fs));
+            _hasher = hasher ?? throw new ArgumentNullException(nameof(hasher));
         }
 
-        public IDictionary<string, string> Compute(IEnumerable<FlatTreeItem> items, string context = "")
+        public async Task<IDictionary<string, string>> Compute(IEnumerable<FlatTreeItem> items, string context = "")
         {
             var withoutFolder = items.Where(i => !(i.Node is TreeNodeFolder));
-            var result = new ConcurrentDictionary<string, string>();
-           
-            Parallel.ForEach(withoutFolder, item =>
+
+            var tasks = withoutFolder.Select(f => Task.Run(async () =>
             {
-                using (var algorithm = _algorithmFactory.Invoke())
-                {
-                    var filePath = _fs.Path.Combine(context, item.Name);
-                    var fileStream = _fs.File.OpenRead(filePath);
-                    
-                    var hash = algorithm.ComputeHash(fileStream);
-                    
-                    fileStream.Close();
-                    fileStream.Dispose();
-                    
-                    var sb = new StringBuilder(hash.Length * 2);
+                var filePath = _fs.Path.Combine(context, f.Name);
+                var fileStream = _fs.File.OpenRead(filePath);
 
-                    foreach (byte b in hash)
-                    {
-                        sb.Append(b.ToString("x2"));
-                    }
+                var hash = await _hasher.Compute(fileStream);
 
-                    result[item.Name] = sb.ToString();
-                }
-                
-            });
+                fileStream.Close();
+                fileStream.Dispose();
 
-            return new SortedDictionary<string, string>(result);
+                return (f.Name, hash);
+            })).ToList();
+
+            await Task.WhenAll(tasks);
+            
+            return new SortedDictionary<string, string>(tasks.ToDictionary(f => f.Result.Name, f => f.Result.hash));
         }
     }
 }

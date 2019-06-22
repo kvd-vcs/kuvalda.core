@@ -1,7 +1,9 @@
+using System.Threading.Tasks;
+
 namespace Kuvalda.Cli
 {
     public interface IStartup
     {
-        void Run(string[] args);
+        Task Run(string[] args);
     }
 }

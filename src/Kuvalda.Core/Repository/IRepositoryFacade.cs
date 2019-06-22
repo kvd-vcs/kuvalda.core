@@ -33,6 +33,6 @@ namespace Kuvalda.Core
         ///     Return status of repository(modified, deleted and added files)
         /// </summary>
         /// <returns> status of repo </returns>
-        Task<StatusResult> GetStatus();
+        Task<StatusResult> GetStatus(StatusOptions options);
     }
 }

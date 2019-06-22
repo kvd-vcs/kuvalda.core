@@ -4,6 +4,6 @@ namespace Kuvalda.Core.Status
 {
     public interface IStatusService
     {
-        Task<DifferenceEntries> GetStatus(string chash);
+        Task<DifferenceEntries> GetStatus(string path, string chash);
     }
 }
