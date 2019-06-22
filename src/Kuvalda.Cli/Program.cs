@@ -76,7 +76,10 @@ namespace Kuvalda.Cli
             serviceCollection.AddSingleton<IDictionary<string, ICliCommand>>(ctx => new Dictionary<string, ICliCommand>()
             {
                 ["help"] = ctx.GetRequiredService<HelpCommand>(),
-                ["init"] = ctx.GetRequiredService<InitCommand>()
+                ["init"] = ctx.GetRequiredService<InitCommand>(),
+                ["status"] = ctx.GetRequiredService<StatusCommand>(),
+                ["commit"] = ctx.GetRequiredService<CommitCommand>(),
+                ["checkout"] = ctx.GetRequiredService<CheckoutCommand>(),
             });
             
             return serviceCollection.BuildServiceProvider();
@@ -85,7 +88,10 @@ namespace Kuvalda.Cli
         private static void InitCommands(ServiceCollection serviceCollection)
         {
             serviceCollection.AddTransient<HelpCommand>()
-                .AddTransient<InitCommand>();
+                .AddTransient<InitCommand>()
+                .AddTransient<StatusCommand>()
+                .AddTransient<CommitCommand>()
+                .AddTransient<CheckoutCommand>();
         }
 
         private static void AddConfiguration(string[] args, ServiceCollection serviceCollection)
