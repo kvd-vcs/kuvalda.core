@@ -3,11 +3,11 @@ namespace Kuvalda.Core
     public interface IRefsService
     {
         bool Exists(string name);
-        string Get(string name);
-        string Store(string name, string chash);
+        Reference Get(string name);
+        string GetCommit(string name);
+        void Store(string name, Reference reference);
+        Reference GetHead();
         string GetHeadCommit();
-        string GetGetHeadRefName();
-        string SetHeadCommit(string chash);
-        string SetHeadRef(string refName);
+        void SetHead(Reference value);
     }
 }

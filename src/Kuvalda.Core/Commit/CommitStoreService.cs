@@ -34,11 +34,14 @@ namespace Kuvalda.Core
             
             foreach (var commitHash in commit.Hashes)
             {
-                var filePath = _fileSystem.Path.Combine(commit.Path, commitHash.Key);
-                using (var file = _fileSystem.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                waitStoreTasks.Add(Task.Run(() =>
                 {
-                    waitStoreTasks.Add(Task.Run(() => _blobStorage.Set(commitHash.Value, file)));
-                }
+                    var filePath = _fileSystem.Path.Combine(commit.Path, commitHash.Key);
+                    using (var file = _fileSystem.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        _blobStorage.Set(commitHash.Value, file);
+                    }
+                }));
             }
 
             await Task.WhenAll(waitStoreTasks);

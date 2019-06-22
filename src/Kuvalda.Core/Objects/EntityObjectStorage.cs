@@ -36,7 +36,9 @@ namespace Kuvalda.Core
                 using (var stream = new MemoryStream())
                 {
                     SerializationProvider.Serialize(entity, stream);
+                    stream.Position = 0;
                     var hash = await HashComputeProvider.Compute(stream);
+                    stream.Position = 0;
                     Storage.Set(hash, stream);
                     return hash;
                 }

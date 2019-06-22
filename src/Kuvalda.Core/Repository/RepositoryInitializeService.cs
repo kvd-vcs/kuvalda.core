@@ -26,13 +26,13 @@ namespace Kuvalda.Core
 
         public bool IsInitialized(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemName);
+            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
             return _fileSystem.File.Exists(systemFolderPath);
         }
         
         public async Task Initialize(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemName);
+            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
             if (_fileSystem.Directory.Exists(systemFolderPath))
             {
                 _logger.Warning("Try initialize alredy initialized repository at path {RepositoryPath}", path);
@@ -40,7 +40,8 @@ namespace Kuvalda.Core
             }
 
             _fileSystem.Directory.CreateDirectory(systemFolderPath);
-            _fileSystem.File.Create(_fileSystem.Path.Combine(systemFolderPath, _options.HeadFilePath));
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(systemFolderPath, "refs"));
+            _fileSystem.File.Create(_fileSystem.Path.Combine(systemFolderPath, "refs", _options.HeadFilePath));
             
             _logger.Information("Create repository system folder at {RepositoryPath}", systemFolderPath);
 
@@ -49,8 +50,8 @@ namespace Kuvalda.Core
             
             _logger.Information("Create init commit with chash {InitChash}", initChash);
 
-            _refsService.Store(_options.DefaultBranchName, initChash);
-            _refsService.SetHeadRef(_options.DefaultBranchName);
+            _refsService.Store(_options.DefaultBranchName, new CommitReference(initChash));
+            _refsService.SetHead(new PointerReference(_options.DefaultBranchName));
             
             _logger.Information("Write init chash to default ref with name {DefaultBranchName}", _options.DefaultBranchName);
         }
