@@ -1,4 +1,0 @@
-language: shell
-os: windows
-script:  
-  - powershell -ExecutionPolicy Bypass -File "build.ps1"
