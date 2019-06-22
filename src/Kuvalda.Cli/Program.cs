@@ -52,7 +52,18 @@ namespace Kuvalda.Cli
                 })
                 .AddTransient<ISerializationProvider, JsonSerializationProvider>()
                 .AddTransient<IHashComputeProvider, SHA2HashComputeProvider>()
-                .AddTransient<ITreeCreator, TreeCreator>()
+                .AddTransient<ITreeFilter, TreeFilter>(ctx =>
+                {
+                    var service = new TreeFilter(ctx.GetRequiredService<IFileSystem>());
+                    service.PredefinedIgnores = new List<string>()
+                    {
+                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder
+                    };
+                    return service;
+                })
+                .AddTransient<TreeCreator>()
+                .AddTransient<ITreeCreator, TreeCreatorFiltered>(ctx => new TreeCreatorFiltered(
+                    ctx.GetRequiredService<TreeCreator>(), ctx.GetRequiredService<ITreeFilter>()))
                 .AddTransient<IHashModificationFactory, HashModificationFactory>()
                 .AddTransient<IDifferenceEntriesCreator, DifferenceEntriesCreator>()
                 .AddTransient<IFlatTreeCreator, FlatTreeCreator>()

@@ -26,7 +26,7 @@ namespace Kuvalda.Cli
 
             var chash = await _repositoryFacade.Commit(new CommitOptions(_applicationInstanceSettings.RepositoryPath, message));
 
-            Console.WriteLine(chash);
+            Console.WriteLine(chash.Chash);
             
             return 0;
         }
