@@ -16,6 +16,7 @@ namespace KuvaldaTests
         private Mock<IEntityObjectStorage<TreeNode>> _treeStorageMock;
         private Mock<ITreeCreator> _treeCreatorMock;
         private Mock<IHashModificationFactory> _hashesFactoryMock;
+        private Mock<IFlatTreeCreator> _flatTreeCreator;
 
         [SetUp]
         public void SetUp()
@@ -24,9 +25,10 @@ namespace KuvaldaTests
             _treeStorageMock = new Mock<IEntityObjectStorage<TreeNode>>();
             _treeCreatorMock = new Mock<ITreeCreator>();
             _hashesFactoryMock = new Mock<IHashModificationFactory>();
+            _flatTreeCreator = new Mock<IFlatTreeCreator>();
 
             _commitCreateService = new CommitCreateService(_commitStorageMock.Object, _treeCreatorMock.Object,
-                _treeStorageMock.Object, _hashesFactoryMock.Object);
+                _treeStorageMock.Object, _hashesFactoryMock.Object, _flatTreeCreator.Object);
         }
 
         [Test]
@@ -45,7 +47,12 @@ namespace KuvaldaTests
             _treeCreatorMock.Setup(s => s.Create("/")).Returns(Task.FromResult(currentNode));
             _commitStorageMock.Setup(s => s.Get(chashPrev)).Returns(Task.FromResult(prevCommit));
             _treeStorageMock.Setup(s => s.Get(prevCommit.TreeHash)).Returns(Task.FromResult(prevNode));
-            _hashesFactoryMock.Setup(s => s.CreateHashes(prevNode, currentNode)).Returns(Task.FromResult(hashes));
+            _hashesFactoryMock.Setup(s => s.CreateHashes(prevNode, currentNode, "/")).Returns(Task.FromResult(hashes));
+            _flatTreeCreator.Setup(s => s.Create(currentNode, "/"))
+                .Returns(new [] {new FlatTreeItem(currentNode.Name, currentNode)});
+
+            _flatTreeCreator.Setup(s => s.Create(prevNode, "/"))
+                .Returns(new [] {new FlatTreeItem(prevNode.Name, prevNode)});
             
             // Act
             var result = await _commitCreateService.CreateCommit("/", chashPrev);
@@ -55,7 +62,7 @@ namespace KuvaldaTests
             
             Assert.AreEqual("/", result.Path);
             Assert.AreEqual(currentNode, result.Tree);
-            Assert.AreEqual(hashes, result.Hashes);
+            Assert.AreEqual(hashes.Keys, result.ItemsForWrite);
         }
         
         [Test]
@@ -66,8 +73,14 @@ namespace KuvaldaTests
             IDictionary<string, string> hashes = new Dictionary<string, string>();
             
             _treeCreatorMock.Setup(s => s.Create("/")).Returns(Task.FromResult(currentNode));
-            _hashesFactoryMock.Setup(s => s.CreateHashes(It.IsAny<TreeNodeFolder>(), currentNode))
+            _hashesFactoryMock.Setup(s => s.CreateHashes(It.IsAny<TreeNodeFolder>(), currentNode, "/"))
                 .Returns(Task.FromResult(hashes));
+            
+            _flatTreeCreator.Setup(s => s.Create(currentNode, "/"))
+                .Returns(new [] {new FlatTreeItem(currentNode.Name, currentNode)});
+
+            _flatTreeCreator.Setup(s => s.Create(new TreeNodeFolder(""), "/"))
+                .Returns(new [] {new FlatTreeItem("", new TreeNodeFolder(""))});
             
             // Act
             var result = await _commitCreateService.CreateCommit("/");
@@ -77,7 +90,7 @@ namespace KuvaldaTests
             
             Assert.AreEqual("/", result.Path);
             Assert.AreEqual(currentNode, result.Tree);
-            Assert.AreEqual(hashes, result.Hashes);
+            Assert.AreEqual(hashes.Keys, result.ItemsForWrite);
         }
     }
 }

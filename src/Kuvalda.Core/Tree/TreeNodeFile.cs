@@ -5,15 +5,22 @@ namespace Kuvalda.Core
     public class TreeNodeFile : TreeNode
     {
         public readonly DateTime ModificationTime;
+        public string Hash;
         
-        public TreeNodeFile(string name, DateTime modificationTime) : base(name)
+        public TreeNodeFile(string name, DateTime modificationTime) : this(name, modificationTime, null)
+        {
+        }
+        
+        public TreeNodeFile(string name, DateTime modificationTime, string hash) : base(name)
         {
             ModificationTime = modificationTime;
+            Hash = hash;
         }
 
         protected bool Equals(TreeNodeFile other)
         {
-            return base.Equals(other) && ModificationTime.Equals(other.ModificationTime);
+            return base.Equals(other) && ModificationTime.Equals(other.ModificationTime)
+                && (Hash != null ? Hash.Equals(other.Hash) : true);
         }
 
         public override bool Equals(object obj)
@@ -30,13 +37,14 @@ namespace Kuvalda.Core
             {
                 int hashCode = base.GetHashCode();
                 hashCode = (hashCode * 397) ^ ModificationTime.GetHashCode();
+                if (Hash != null) hashCode = (hashCode * 397) ^ Hash.GetHashCode();
                 return hashCode;
             }
         }
-        
+
         public override object Clone()
         {
-            return new TreeNodeFile(Name, ModificationTime);
+            return new TreeNodeFile(Name, ModificationTime, Hash);
         }
     }
 }

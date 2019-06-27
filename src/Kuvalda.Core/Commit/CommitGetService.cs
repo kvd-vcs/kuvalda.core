@@ -26,19 +26,12 @@ namespace Kuvalda.Core
             }
 
             var commit = await _commitStorage.Get(chash);
-
-            if (string.IsNullOrEmpty(commit.HashesAddress))
-            {
-                throw new NullReferenceException(nameof(commit.HashesAddress));
-            }
             
-            var hashes = await _hashStorage.Get(commit.HashesAddress);
             var tree = await _treeStorage.Get(commit.TreeHash);
 
             return new CommitDto()
             {
                 Commit = commit,
-                Hashes = hashes,
                 Tree = tree
             };
         }

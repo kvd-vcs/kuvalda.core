@@ -38,7 +38,7 @@ namespace Kuvalda.Core.Checkout
             var currentTree = await _treeCreator.Create(path);
             var diff = _differenceEntriesCreator.Create(currentTree, targetCommit.Tree);
             var flatTargetTree = _flatTreeCreator.Create(targetCommit.Tree).ToList();
-            var hashes = targetCommit.Hashes;
+            var hashes = targetCommit.ItemsForWrite;
 
             _logger.Information("Start modify file system at path {Path}", path);
             _logger.Information("Difference summary: remove {Removed}, add {Adding}, modified {Modified}", diff.Removed.Count(), diff.Added.Count(),
@@ -55,45 +55,57 @@ namespace Kuvalda.Core.Checkout
             return diff;
         }
 
-        private async Task ModifyFiles(string path, DifferenceEntries diff, IDictionary<string, string> hashes, List<FlatTreeItem> flatTargetTree)
+        private async Task ModifyFiles(string path, DifferenceEntries diff, IEnumerable<string> hashes, List<FlatTreeItem> flatTargetTree)
         {
-            foreach (var modified in diff.Modified.Where(a => hashes.ContainsKey(a)))
+            var hashesList = hashes as string[] ?? hashes.ToArray();
+            var flatTreeMap = flatTargetTree.ToDictionary(c => c.Name, c => c.Node);
+            foreach (var modified in diff.Modified.Where(a => hashesList.Contains(a)))
             {
-                var modifiedPath = _fileSystem.Path.Combine(path, modified);
-                using (var modifyStream =
-                    _fileSystem.File.Open(modifiedPath, FileMode.Truncate, FileAccess.Write, FileShare.Write))
+                var node = flatTreeMap[modified];
+                if (node is TreeNodeFile fileNode)
                 {
-                    var source = _blobStorage.Get(hashes[modified]);
-                    await source.CopyToAsync(modifyStream);
-                    await modifyStream.FlushAsync();
-                    modifyStream.Close();
+                    var modifiedPath = _fileSystem.Path.Combine(path, modified);
+                    using (var modifyStream =
+                        _fileSystem.File.Open(modifiedPath, FileMode.Truncate, FileAccess.Write, FileShare.Write))
+                    {
+                        var source = _blobStorage.Get(fileNode.Hash);
+                        await source.CopyToAsync(modifyStream);
+                        await modifyStream.FlushAsync();
+                        modifyStream.Close();
 
-                    File.SetLastWriteTimeUtc(modifiedPath,
-                        ((TreeNodeFile) flatTargetTree.First(t => t.Name == modified).Node).ModificationTime);
+                        File.SetLastWriteTimeUtc(modifiedPath,
+                            ((TreeNodeFile) flatTargetTree.First(t => t.Name == modified).Node).ModificationTime);
 
-                    _logger.Information("Modified file {Modifies}", modifiedPath);
+                        _logger.Information("Modified file {Modifies}", modifiedPath);
+                    }
                 }
             }
         }
 
-        private async Task AddFiles(string path, DifferenceEntries diff, IDictionary<string, string> hashes, List<FlatTreeItem> flatTargetTree)
+        private async Task AddFiles(string path, DifferenceEntries diff, IEnumerable<string> hashes, List<FlatTreeItem> flatTargetTree)
         {
-            var addFiltered = diff.Added.Where(a => hashes.ContainsKey(a)).ToList();
+            var hashesList = hashes as string[] ?? hashes.ToArray();
+            var flatTreeMap = flatTargetTree.ToDictionary(c => c.Name, c => c.Node);
+            var addFiltered = diff.Added.Where(hashesList.Contains).ToList(); // TODO: implment folder creation
             foreach (var adding in addFiltered)
             {
-                var addingPath = _fileSystem.Path.Combine(path, adding);
-                using (var addStream = _fileSystem.File.Create(addingPath))
+                var node = flatTreeMap[adding];
+                if (node is TreeNodeFile fileNode)
                 {
-                    var source = _blobStorage.Get(hashes[adding]);
-                    await source.CopyToAsync(addStream);
-                    await addStream.FlushAsync();
-                    addStream.Close();
+                    var addingPath = _fileSystem.Path.Combine(path, adding);
+                    using (var addStream = _fileSystem.File.Create(addingPath))
+                    {
+                        var source = _blobStorage.Get(fileNode.Hash);
+                        await source.CopyToAsync(addStream);
+                        await addStream.FlushAsync();
+                        addStream.Close();
 
-                    var addingNode = ((TreeNodeFile) flatTargetTree.First(t => t.Name == adding).Node);
-                    _fileSystem.File.SetLastWriteTimeUtc(adding, addingNode.ModificationTime);
+                        var addingNode = ((TreeNodeFile) flatTargetTree.First(t => t.Name == adding).Node);
+                        _fileSystem.File.SetLastWriteTimeUtc(adding, addingNode.ModificationTime);
+                    }
+
+                    _logger.Information("File added {Added}", addingPath);
                 }
-
-                _logger.Information("File added {Added}", addingPath);
             }
         }
 

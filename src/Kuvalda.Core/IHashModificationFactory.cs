@@ -5,6 +5,6 @@ namespace Kuvalda.Core
 {
     public interface IHashModificationFactory
     {
-        Task<IDictionary<string, string>> CreateHashes(TreeNode lTree, TreeNode rTree);
+        Task<IDictionary<string, string>> CreateHashes(TreeNode lTree, TreeNode rTree, string path);
     }
 }

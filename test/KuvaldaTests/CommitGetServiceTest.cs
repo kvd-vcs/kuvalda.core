@@ -34,7 +34,6 @@ namespace KuvaldaTests
             var chash = "ca39a3ee5e6b4b0d3255bfef95601890afd80709";
             var commitModel = new CommitModel()
             {
-                HashesAddress = "ha39a3ee5e6b4b0d3255bfef95601890afd80709",
                 TreeHash = "ta39a3ee5e6b4b0d3255bfef95601890afd80709",
                 Labels = new Dictionary<string, string>(),
             };
@@ -42,8 +41,6 @@ namespace KuvaldaTests
             var hashes = Mock.Of<IDictionary<string, string>>();
 
             _commitStorageMock.Setup(storage => storage.Get(chash)).Returns(Task.FromResult(commitModel));
-            _hashStorageMock.Setup(storage => storage.Get(commitModel.HashesAddress))
-                .Returns(Task.FromResult(hashes));
             _treeStorageMock.Setup(storage => storage.Get(commitModel.TreeHash))
                 .Returns(Task.FromResult(node));
             
@@ -54,7 +51,6 @@ namespace KuvaldaTests
             Assert.NotNull(result);
             Assert.AreEqual(commitModel, result.Commit);
             Assert.AreEqual(node, result.Tree);
-            Assert.AreEqual(hashes, result.Hashes);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Kuvalda.Core
         public async Task<string> Compute(Stream stream)
         {
             string hashString;
-            using (var algorithm = new SHA1Managed())
+            using (var algorithm = new SHA256Managed())
             {
                 var hash = await Task.Run(() => algorithm.ComputeHash(stream));
                 var sb = new StringBuilder(hash.Length * 2);

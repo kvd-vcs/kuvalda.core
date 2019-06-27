@@ -18,12 +18,12 @@ namespace Kuvalda.Core
             HashTableCreator = hashTableCreator;
         }
 
-        public async Task<IDictionary<string, string>> CreateHashes(TreeNode lTree, TreeNode rTree)
+        public async Task<IDictionary<string, string>> CreateHashes(TreeNode lTree, TreeNode rTree, string path)
         {
             var rightFlat = FlatTreeCreator.Create(rTree);
             var diff = Differ.Create(lTree, rTree);
             var forHashFlatItems = rightFlat.Where(i => diff.Modified.Contains(i.Name) || diff.Added.Contains(i.Name));
-            var hashes = await HashTableCreator.Compute(forHashFlatItems, Environment.CurrentDirectory);
+            var hashes = await HashTableCreator.Compute(forHashFlatItems, path);
 
             return hashes;
         }
