@@ -71,16 +71,16 @@ namespace KuvaldaTests
 
             var flatTreeLeft = new[]
             {
-                new FlatTreeItem("nomodify", new TreeNodeFile("nomodify", new DateTime(0))),
-                new FlatTreeItem("modify", new TreeNodeFile("modify", new DateTime(1))),
-                new FlatTreeItem("removed", new TreeNodeFile("removed", new DateTime(1))),
+                new FlatTreeItem("nomodify", new TreeNodeFile("nomodify", new DateTime(2019, 1, 1))),
+                new FlatTreeItem("modify", new TreeNodeFile("modify", new DateTime(2019, 1, 1))),
+                new FlatTreeItem("removed", new TreeNodeFile("removed", new DateTime(2019, 1, 1))),
             };
             
             var flatTreeRight = new[]
             {
-                new FlatTreeItem("nomodify", new TreeNodeFile("nomodify", new DateTime(0))),
-                new FlatTreeItem("modify", new TreeNodeFile("modify", new DateTime(2))),
-                new FlatTreeItem("added", new TreeNodeFile("added", new DateTime(1))),
+                new FlatTreeItem("nomodify", new TreeNodeFile("nomodify", new DateTime(2019, 1, 1))),
+                new FlatTreeItem("modify", new TreeNodeFile("modify", new DateTime(2019, 1, 2))),
+                new FlatTreeItem("added", new TreeNodeFile("added", new DateTime(2019, 1, 1))),
             };
             
             // Act
