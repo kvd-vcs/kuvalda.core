@@ -3,11 +3,16 @@ pool:
 
 steps:
 
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'export GIT_VERSION=$(git describe); export Build.BuildNumber=$GIT_VERSION'
+
 - task: DotNetCoreCLI@2
   displayName: Build
   inputs:
     command: 'build'
-    arguments: '-c Release'
+    arguments: '-c Release /p:AssemblyVersion=$(GIT_VERSION) /p:Version=$(GIT_VERSION)'
 
 - task: DotNetCoreCLI@2
   displayName: Test
