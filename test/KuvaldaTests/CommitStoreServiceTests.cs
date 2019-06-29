@@ -16,23 +16,22 @@ namespace KuvaldaTests
         private CommitStoreService _commitStoreService;
         
         private Mock<IEntityObjectStorage<CommitModel>> _commitStorageMock;
-        private Mock<IEntityObjectStorage<IDictionary<string, string>>> _hashStorageMock;
         private Mock<IEntityObjectStorage<TreeNode>> _treeStorageMock;
         private MockFileSystem _fileSystem;
         private Mock<IObjectStorage> _blobStorageMock;
+        private Mock<IFlatTreeCreator> _flatTreeCreator;
 
         [SetUp]
         public void SetUp()
         {
             _commitStorageMock = new Mock<IEntityObjectStorage<CommitModel>>();
-            _hashStorageMock = new Mock<IEntityObjectStorage<IDictionary<string, string>>>();
             _treeStorageMock = new Mock<IEntityObjectStorage<TreeNode>>();
             _fileSystem = new MockFileSystem();
             _blobStorageMock = new Mock<IObjectStorage>();
-
+            _flatTreeCreator = new Mock<IFlatTreeCreator>();
 
             _commitStoreService = new CommitStoreService(_commitStorageMock.Object, _treeStorageMock.Object,
-                _hashStorageMock.Object, _fileSystem, _blobStorageMock.Object);
+                _fileSystem, _blobStorageMock.Object, _flatTreeCreator.Object);
         }
 
         [Test]
@@ -40,7 +39,6 @@ namespace KuvaldaTests
         {
             // Arrane
             var chash = "ca39a3ee5e6b4b0d3255bfef95601890afd80709";
-            var hhash = "ha39a3ee5e6b4b0d3255bfef95601890afd80709";
             var thash = "ta39a3ee5e6b4b0d3255bfef95601890afd80709";
             var fhash = "fa39a3ee5e6b4b0d3255bfef95601890afd80709";
             
@@ -48,11 +46,7 @@ namespace KuvaldaTests
             {
                 Labels = new Dictionary<string, string>(),
             };
-            var node = (TreeNode)new TreeNodeFile("", DateTime.Now);
-            IDictionary<string, string> hashes = new Dictionary<string, string>()
-            {
-                ["file"] = fhash
-            };
+            var node = (TreeNode)new TreeNodeFile("file", DateTime.Now, fhash);
             
             _fileSystem.AddFile("/file", new MockFileData("content"));
             
@@ -60,14 +54,14 @@ namespace KuvaldaTests
             {
                 Path = "/",
                 Commit = commitModel,
-                Hashes = hashes,
-                Tree = node
+                Tree = node,
+                ItemsForWrite = new [] {"file"}
             };
 
-            _hashStorageMock.Setup(s => s.Store(hashes)).Returns(Task.FromResult(hhash));
             _treeStorageMock.Setup(s => s.Store(node)).Returns(Task.FromResult(thash));
             _blobStorageMock.Setup(s => s.Set(fhash, It.IsAny<Stream>()));
             _commitStorageMock.Setup(s => s.Store(commitModel)).Returns(Task.FromResult(chash));
+            _flatTreeCreator.Setup(s => s.Create(It.IsAny<TreeNode>(), "/")).Returns(new [] {new FlatTreeItem("file", node)});
             
             // Act
             var result = await _commitStoreService.StoreCommit(commitDto);
@@ -83,7 +77,6 @@ namespace KuvaldaTests
         {
             // Arrane
             var chash = "ca39a3ee5e6b4b0d3255bfef95601890afd80709";
-            var hhash = "ha39a3ee5e6b4b0d3255bfef95601890afd80709";
             var thash = "ta39a3ee5e6b4b0d3255bfef95601890afd80709";
             
             var commitModel = new CommitModel()
@@ -91,17 +84,15 @@ namespace KuvaldaTests
                 Labels = new Dictionary<string, string>(),
             };
             var node = (TreeNode)new TreeNodeFile("", DateTime.Now);
-            IDictionary<string, string> hashes = new Dictionary<string, string>();
             
             var commitDto = new CommitDto()
             {
                 Path = "/",
                 Commit = commitModel,
-                Hashes = hashes,
-                Tree = node
+                Tree = node,
+                ItemsForWrite = new string[0]
             };
 
-            _hashStorageMock.Setup(s => s.Store(hashes)).Returns(Task.FromResult(hhash));
             _treeStorageMock.Setup(s => s.Store(node)).Returns(Task.FromResult(thash));
             _commitStorageMock.Setup(s => s.Store(commitModel)).Returns(Task.FromResult(chash));
             

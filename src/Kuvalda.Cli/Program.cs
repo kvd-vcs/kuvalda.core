@@ -23,6 +23,7 @@ namespace Kuvalda.Cli
         private static IServiceProvider ConfigureServices(string[] args)
         {
             Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
                 .WriteTo.Console()
                 .CreateLogger();
             

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Kuvalda.Core
@@ -9,44 +10,49 @@ namespace Kuvalda.Core
     {
         private readonly IEntityObjectStorage<CommitModel> _commitStorage;
         private readonly IEntityObjectStorage<TreeNode> _treeStorage;
-        private readonly IEntityObjectStorage<IDictionary<string, string>> _hashStorage;
         private readonly IFileSystem _fileSystem;
         private readonly IObjectStorage _blobStorage;
+        private readonly IFlatTreeCreator _flatTreeCreator;
 
         public CommitStoreService(IEntityObjectStorage<CommitModel> commitStorage,
             IEntityObjectStorage<TreeNode> treeStorage,
-            IEntityObjectStorage<IDictionary<string, string>> hashStorage,
-            IFileSystem fileSystem, IObjectStorage blobStorage)
+            IFileSystem fileSystem, IObjectStorage blobStorage, IFlatTreeCreator flatTreeCreator)
         {
             _commitStorage = commitStorage;
             _treeStorage = treeStorage;
-            _hashStorage = hashStorage;
             _fileSystem = fileSystem;
             _blobStorage = blobStorage;
+            _flatTreeCreator = flatTreeCreator;
         }
 
         public async Task<string> StoreCommit(CommitDto commit)
         {
-            var hhash = await _hashStorage.Store(commit.Hashes);
             var thash = await _treeStorage.Store(commit.Tree);
 
             var waitStoreTasks = new List<Task>();
+            var flatTree = _flatTreeCreator.Create(commit.Tree).ToDictionary(c => c.Name, c => c.Node);
             
-            foreach (var commitHash in commit.Hashes)
+            foreach (var path in commit.ItemsForWrite)
             {
+                var fileNode = flatTree[path] as TreeNodeFile;
+
+                if (fileNode == null)
+                {
+                    continue;
+                }
+                
                 waitStoreTasks.Add(Task.Run(() =>
                 {
-                    var filePath = _fileSystem.Path.Combine(commit.Path, commitHash.Key);
+                    var filePath = _fileSystem.Path.Combine(commit.Path, path);
                     using (var file = _fileSystem.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        _blobStorage.Set(commitHash.Value, file);
+                        _blobStorage.Set(fileNode.Hash, file);
                     }
                 }));
             }
 
             await Task.WhenAll(waitStoreTasks);
-
-            commit.Commit.HashesAddress = hhash;
+            
             commit.Commit.TreeHash = thash;
 
             return await _commitStorage.Store(commit.Commit);
