@@ -3,6 +3,10 @@ pool:
 
 steps:
 
+- task: GitVersion@4
+  inputs:
+    updateAssemblyInfo: true
+
 - task: DotNetCoreCLI@2
   displayName: Build
   inputs:
