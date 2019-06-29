@@ -11,7 +11,7 @@ steps:
   displayName: Build
   inputs:
     command: 'build'
-    arguments: '-c Release /p:AssemblyVersion=$GIT_VERSION /p:Version=$GIT_VERSION'
+    arguments: '-c Release /p:AssemblyVersion=$(GIT_VERSION) /p:Version=$(GIT_VERSION)'
 
 - task: DotNetCoreCLI@2
   displayName: Test
