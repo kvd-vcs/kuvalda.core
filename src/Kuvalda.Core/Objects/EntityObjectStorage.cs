@@ -26,7 +26,13 @@ namespace Kuvalda.Core
 
         public Task<TEntity> Get(string key)
         {
-            return Task.Run(() => SerializationProvider.Deserialize<TEntity>(Storage.Get(key)));
+            return Task.Run(() =>
+            {
+                using (var stream = Storage.Get(key))
+                {
+                    return SerializationProvider.Deserialize<TEntity>(stream);
+                }
+            });
         }
 
         public Task<string> Store(TEntity entity)

@@ -15,7 +15,7 @@ namespace Kuvalda.Core
 
         protected bool Equals(TreeNodeFile other)
         {
-            return base.Equals(other) && (ModificationTime - other.ModificationTime).TotalSeconds < 0.5f;
+            return base.Equals(other) && Math.Abs((ModificationTime - other.ModificationTime).TotalSeconds) < 0.5f;
         }
 
         public override bool Equals(object obj)

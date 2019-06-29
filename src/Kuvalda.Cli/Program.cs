@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Kuvalda.Core;
 using Kuvalda.Core.Checkout;
 using Kuvalda.Core.Status;
+using Kuvalda.FastRsyncNet;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -42,6 +43,7 @@ namespace Kuvalda.Cli
                 .AddTransient<ICommitCreateService, CommitCreateService>()
                 .AddTransient<IEntityObjectStorage<CommitModel>, EntityObjectStorage<CommitModel>>()
                 .AddTransient<IEntityObjectStorage<TreeNode>, EntityObjectStorage<TreeNode>>()
+                .AddTransient<IEntityObjectStorage<CompressModel>, EntityObjectStorage<CompressModel>>()
                 .AddTransient<IEntityObjectStorage<IDictionary<string, string>>,
                     EntityObjectStorage<IDictionary<string, string>>>()
                 .AddTransient<IObjectStorage, FileSystemObjectStorage>(ctx =>
@@ -82,21 +84,19 @@ namespace Kuvalda.Cli
                 .AddTransient<ICheckoutService, CheckoutService>()
                 .AddTransient<IStatusService, StatusService>()
                 .AddTransient<IHashTableCreator, HashTableCreator>()
-                .AddTransient<ILogService, LogService>();
-
+                .AddTransient<ILogService, LogService>()
+                .AddTransient<IChangesCompressService, FastRsyncChangesCompressService>()
+                .AddTransient<IChangesDecompressService, FastRsyncChangesDecompressService>()
+                .AddTransient<ITempObjectStorage, TempObjectStorage>(ctx =>
+                {
+                    var filesystem = ctx.GetRequiredService<IFileSystem>();
+                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
+                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, "temp");
+                    return new TempObjectStorage(path, filesystem);
+                });
 
             InitCommands(serviceCollection);
 
-            serviceCollection.AddSingleton<IDictionary<string, ICliCommand>>(ctx => new Dictionary<string, ICliCommand>()
-            {
-                ["help"] = ctx.GetRequiredService<HelpCommand>(),
-                ["init"] = ctx.GetRequiredService<InitCommand>(),
-                ["status"] = ctx.GetRequiredService<StatusCommand>(),
-                ["commit"] = ctx.GetRequiredService<CommitCommand>(),
-                ["checkout"] = ctx.GetRequiredService<CheckoutCommand>(),
-                ["log"] = ctx.GetRequiredService<LogCommand>(),
-            });
-            
             return serviceCollection.BuildServiceProvider();
         }
 
@@ -107,7 +107,21 @@ namespace Kuvalda.Cli
                 .AddTransient<StatusCommand>()
                 .AddTransient<CommitCommand>()
                 .AddTransient<LogCommand>()
-                .AddTransient<CheckoutCommand>();
+                .AddTransient<CheckoutCommand>()
+                .AddTransient<CompressCommand>()
+                .AddTransient<DecompressCommand>();
+            
+            serviceCollection.AddSingleton<IDictionary<string, ICliCommand>>(ctx => new Dictionary<string, ICliCommand>()
+            {
+                ["help"] = ctx.GetRequiredService<HelpCommand>(),
+                ["init"] = ctx.GetRequiredService<InitCommand>(),
+                ["status"] = ctx.GetRequiredService<StatusCommand>(),
+                ["commit"] = ctx.GetRequiredService<CommitCommand>(),
+                ["checkout"] = ctx.GetRequiredService<CheckoutCommand>(),
+                ["log"] = ctx.GetRequiredService<LogCommand>(),
+                ["compress"] = ctx.GetRequiredService<CompressCommand>(),
+                ["decompress"] = ctx.GetRequiredService<DecompressCommand>(),
+            });
         }
 
         private static void AddConfiguration(string[] args, ServiceCollection serviceCollection)
