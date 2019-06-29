@@ -5,13 +5,13 @@ steps:
 
 - script: |
     _GIT_VERSION=$(git describe --tags)
-    echo ##vso[task.setvariable variable=GIT_VERSION;]$_GIT_VERSION
+    echo "##vso[task.setvariable variable=GIT_VERSION;]$_GIT_VERSION"
 
 - task: DotNetCoreCLI@2
   displayName: Build
   inputs:
     command: 'build'
-    arguments: '-c Release /p:AssemblyVersion=$(GIT_VERSION) /p:Version=$(GIT_VERSION)'
+    arguments: '-c Release /p:AssemblyVersion=$GIT_VERSION /p:Version=$GIT_VERSION'
 
 - task: DotNetCoreCLI@2
   displayName: Test
