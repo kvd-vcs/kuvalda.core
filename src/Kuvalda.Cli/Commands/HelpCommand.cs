@@ -16,12 +16,17 @@ namespace Kuvalda.Cli
         public Task<int> Execute(string[] args)
         {
             Console.WriteLine("usage: skvd [options] command [command options]");
-            Console.WriteLine("available commands:");
+            Console.WriteLine("available commands:\n");
 
             foreach (var commands in _cliCommands)
             {
-                Console.WriteLine(string.Format("\t{0,-20}: {1}", commands.Key, commands.Value.GetHelp()));
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(string.Format(" * {0,-15}", commands.Key));
+                Console.ResetColor();
+                Console.WriteLine(commands.Value.GetHelp());
             }
+            
+            Console.WriteLine();
             
             return Task.FromResult(0);
         }

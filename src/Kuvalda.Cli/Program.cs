@@ -62,12 +62,19 @@ namespace Kuvalda.Cli
                 .AddTransient<ISerializationProvider, JsonSerializationProvider>()
                 .AddTransient<ICommitServiceFacade, CommitServiceFacade>()
                 .AddTransient<ICommitGetService, CommitGetService>()
-                .AddTransient<ICheckoutService, CheckoutService>()
                 .AddTransient<IStatusService, StatusService>()
                 .AddTransient<ILogService, LogService>()
                 .AddTransient<IChangesCompressService, FastRsyncChangesCompressService>()
                 .AddTransient<IChangesDecompressService, FastRsyncChangesDecompressService>()
-                .AddTransient<IRepositoryCompressFacade, RepositoryCompressFacade>();
+                .AddTransient<IRepositoryCompressFacade, RepositoryCompressFacade>()
+                .AddTransient<CheckoutService>()
+                .AddTransient<ICheckoutService, CheckoutDecompressService>(ctx =>
+                {
+                    var checkout = ctx.GetRequiredService<CheckoutService>();
+                    var refs = ctx.GetRequiredService<IRefsService>();
+                    var repoCompressFacade = ctx.GetRequiredService<IRepositoryCompressFacade>();
+                    return new CheckoutDecompressService(checkout, refs, repoCompressFacade);
+                });
         }
 
         private static void AddHashServices(ServiceCollection svc)
@@ -92,7 +99,8 @@ namespace Kuvalda.Cli
                     var filesystem = ctx.GetRequiredService<IFileSystem>();
                     var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
                         ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, TEMP_FOLDER_NAME);
-                    return new TempObjectStorage(path, filesystem);
+                    var logger = ctx.GetRequiredService<ILogger>();
+                    return new TempObjectStorage(path, filesystem, logger);
                 })
                 .AddTransient<IObjectStorage, FileSystemObjectStorage>(ctx =>
                 {
@@ -104,10 +112,20 @@ namespace Kuvalda.Cli
                 .AddTransient<IRefsService, RefsService>(ctx =>
                 {
                     var filesystem = ctx.GetRequiredService<IFileSystem>();
+                    var options = ctx.GetRequiredService<RepositoryOptions>();
+                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath, options.RepositorySystemFolder);
+                    var logger = ctx.GetRequiredService<ILogger>();
+                    return new RefsService(path, filesystem, options, logger);
+                })
+                .AddTransient<IKeyValueStorage, KeyValueStorage>(ctx =>
+                {
+                    var filesystem = ctx.GetRequiredService<IFileSystem>();
                     var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
-                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder);
-                    return new RefsService(path, filesystem, ctx.GetRequiredService<RepositoryOptions>());
-                });
+                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, "keys");
+                    var logger = ctx.GetRequiredService<ILogger>();
+                    return new KeyValueStorage(filesystem, path, logger);
+                })
+                .AddTransient<ICompressObjectsStorage, CompressObjectsStorage>();
         }
 
         private static void AddTreeServices(ServiceCollection svc)

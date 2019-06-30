@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Abstractions;
+using Serilog;
 
 namespace Kuvalda.Core
 {
@@ -9,14 +10,18 @@ namespace Kuvalda.Core
         private readonly Stream _stream;
         private readonly string _path;
         private readonly IFileSystem _fs;
+        private readonly ILogger _logger;
 
-        public TempFileStream(Stream baseStream, string path, IFileSystem fs)
+        public TempFileStream(Stream baseStream, string path, IFileSystem fs, ILogger logger)
         {
             _stream = baseStream ?? throw new ArgumentNullException(nameof(baseStream));
             _fs = fs ?? throw new ArgumentNullException(nameof(fs));
+            _logger = logger;
             _path = !string.IsNullOrEmpty(path)
                 ? path
                 : throw new ArgumentException($"argument {nameof(path)} is empty or null");
+            
+            _logger?.Debug("Created temp file {path}", _path);
         }
 
         public override void Flush() 
@@ -38,6 +43,7 @@ namespace Kuvalda.Core
         {
             _stream.Close();
             _fs.File.Delete(_path);
+            _logger?.Debug("Delete temp file {path}", _path);
         }
 
         public override bool CanRead => _stream.CanRead;

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Abstractions;
+using Serilog;
 
 namespace Kuvalda.Core
 {
@@ -8,11 +9,13 @@ namespace Kuvalda.Core
     {
         private readonly string _storagePath;
         private readonly IFileSystem _fs;
+        private readonly ILogger _logger;
 
-        public TempObjectStorage(string storagePath, IFileSystem fs)
+        public TempObjectStorage(string storagePath, IFileSystem fs, ILogger logger)
         {
             _storagePath = storagePath;
             _fs = fs;
+            _logger = logger;
         }
 
         public Stream CreateTemp()
@@ -24,7 +27,7 @@ namespace Kuvalda.Core
             
             var tempName = _fs.Path.Combine(_storagePath, Guid.NewGuid().ToString());
             var file = _fs.File.Create(tempName);
-            return new TempFileStream(file, tempName, _fs);
+            return new TempFileStream(file, tempName, _fs, _logger);
         }
     }
 }

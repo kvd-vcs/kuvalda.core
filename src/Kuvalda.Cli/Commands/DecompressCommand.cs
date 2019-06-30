@@ -28,11 +28,11 @@ namespace Kuvalda.Cli
                 return 1;
             }
 
-            var patchHash = args.Skip(1).First();
+            var targetCommit = args.Skip(1).First();
 
             var result = await _repositoryCompressFacade.Patch(new PatchOptions
             {
-                PatchHash = patchHash,
+                DestinationCommit = targetCommit,
                 RepositoryPath = _settings.RepositoryPath
             });
 
@@ -40,6 +40,6 @@ namespace Kuvalda.Cli
             return 0;
         }
         
-        public string GetHelp() => "<patch hash> - apply patch";
+        public string GetHelp() => "<target commit> - apply patch";
     }
 }

@@ -7,21 +7,23 @@ namespace Kuvalda.Core
     {
         private readonly IChangesCompressService _compressService;
         private readonly IChangesDecompressService _decompressService;
-        private readonly IEntityObjectStorage<CompressModel> _compressStorage;
+        private readonly ICompressObjectsStorage _compressStorage;
+        private readonly IRefsService _refsService;
 
-        public RepositoryCompressFacade(IChangesCompressService compressService, IChangesDecompressService decompressService,
-            IEntityObjectStorage<CompressModel> compressStorage)
+        public RepositoryCompressFacade(IChangesCompressService compressService,
+            IChangesDecompressService decompressService, ICompressObjectsStorage compressStorage, IRefsService refsService)
         {
             _compressService = compressService ?? throw new ArgumentNullException(nameof(compressService));
             _decompressService = decompressService ?? throw new ArgumentNullException(nameof(decompressService));
             _compressStorage = compressStorage ?? throw new ArgumentNullException(nameof(compressStorage));
+            _refsService = refsService ?? throw new ArgumentNullException(nameof(refsService));
         }
 
         public async Task<CompressResult> Compress(CompressOptions options)
         {
             var compressModel =
                 await _compressService.Compress(options.SourceCommitHash, options.DestinationCommitHash);
-            var hash = await _compressStorage.Store(compressModel);
+            var hash = await _compressStorage.Set(compressModel);
             
             return new CompressResult
             {
@@ -33,7 +35,13 @@ namespace Kuvalda.Core
 
         public async Task<PatchResult> Patch(PatchOptions options)
         {
-            var patch = await _compressStorage.Get(options.PatchHash);
+            var headCommit = _refsService.GetHeadCommit();
+            var patch = await _compressStorage.Get(headCommit, options.DestinationCommit);
+            if (patch == null)
+            {
+                return null;
+            }
+            
             await _decompressService.Apply(patch, options.RepositoryPath);
             return new PatchResult
             {
