@@ -32,5 +32,7 @@ namespace Kuvalda.Cli
             
             return 0;
         }
+
+        public string GetHelp() => "<commitHash> - checkout to commitHash";
     }
 }

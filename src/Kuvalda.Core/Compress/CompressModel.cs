@@ -7,6 +7,12 @@ namespace Kuvalda.Core
         public string Method { get; set; }
         public string Source { get; set; }
         public string Destination { get; set; }
-        public IDictionary<string, string> Deltas { get; set; }
+        public IDictionary<string, DeltaInfo> Deltas { get; set; }
+
+        public class DeltaInfo
+        {
+            public string DeltaHash { get; set; }
+            public TreeNodeFile FileInfo { get; set; }
+        }
     }
 }

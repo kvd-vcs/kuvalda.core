@@ -24,5 +24,7 @@ namespace Kuvalda.Cli
             
             return 0;
         }
+        
+        public string GetHelp() => "show difference from current HEAD commit";
     }
 }

@@ -1,19 +1,19 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 
 namespace Kuvalda.Cli
 {
     public class Startup : IStartup
     {
-        private readonly ILogger<Startup> _logger;
         private readonly IDictionary<string, ICliCommand> _commands;
+        private readonly HelpCommand _helpCommand;
 
-        public Startup(ILogger<Startup> logger, IDictionary<string, ICliCommand> commands)
+        public Startup(IDictionary<string, ICliCommand> commands, HelpCommand helpCommand)
         {
-            _logger = logger;
-            _commands = commands;
+            _commands = commands ?? throw new ArgumentNullException(nameof(commands));
+            _helpCommand = helpCommand ?? throw new ArgumentNullException(nameof(helpCommand));
         }
 
         public async Task Run(string[] args)
@@ -24,7 +24,7 @@ namespace Kuvalda.Cli
             ICliCommand command = null;
             if (commandName == null)
             {
-                command = _commands["help"];
+                command = _helpCommand;
             }
             else
             {

@@ -55,7 +55,10 @@ namespace Kuvalda.Core
 
         private TreeNode CreateFile(string path)
         {
-            return new TreeNodeFile(_fileSystem.Path.GetFileName(path), _fileSystem.File.GetLastWriteTimeUtc(path));
+            var lastWriteTimeUtc = _fileSystem.File.GetLastWriteTimeUtc(path);
+            lastWriteTimeUtc = lastWriteTimeUtc.AddMilliseconds(-lastWriteTimeUtc.Millisecond);
+            
+            return new TreeNodeFile(_fileSystem.Path.GetFileName(path), lastWriteTimeUtc);
         }
         
         private TreeNodeFolder CreateFolder(string path)

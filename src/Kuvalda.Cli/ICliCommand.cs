@@ -5,5 +5,6 @@ namespace Kuvalda.Cli
     public interface ICliCommand
     {
         Task<int> Execute(string[] args);
+        string GetHelp();
     }
 }

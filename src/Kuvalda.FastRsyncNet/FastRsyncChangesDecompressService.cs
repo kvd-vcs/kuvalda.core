@@ -31,7 +31,7 @@ namespace Kuvalda.FastRsyncNet
         {
             if (patch.Method != FastRsyncChangesCompressService.DIFF_METHOD)
             {
-                _logger.Fatal("Compress method {method} not valid", patch.Method);
+                _logger?.Fatal("Compress method {method} not valid", patch.Method);
                 throw new InvalidDataException($"Compress method {patch.Method} not valid");
             }
             
@@ -44,7 +44,7 @@ namespace Kuvalda.FastRsyncNet
             {
                 foreach (var file in notExistsFiles)
                 {
-                    _logger.Fatal("File {file} not exists", _fs.Path.Combine(path, file));
+                    _logger?.Fatal("File {file} not exists", _fs.Path.Combine(path, file));
                 }
                 throw new FileNotFoundException();
             }
@@ -54,22 +54,26 @@ namespace Kuvalda.FastRsyncNet
             await Task.WhenAll(patchTasks);
         }
 
-        private async Task PatchFile(string path, KeyValuePair<string, string> file)
+        private async Task PatchFile(string path, KeyValuePair<string, CompressModel.DeltaInfo> file)
         {
             var filePath = _fs.Path.Combine(path, file.Key);
             var delta = new DeltaApplier {SkipHashCheck = true};
             using (var basisStream = _fs.File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
-            using (var deltaStream = _objectStorage.Get(file.Value))
+            using (var deltaStream = _objectStorage.Get(file.Value.DeltaHash))
             using (var tempFileStream = _tempObjectStorage.CreateTemp())
             {
                 var deltaReader = new BinaryDeltaReader(deltaStream, new Progress<ProgressReport>());
                 delta.Apply(basisStream, deltaReader, tempFileStream);
-                _logger.Debug("For file {file} created delta", filePath);
+                _logger?.Debug("For file {file} created delta", filePath);
                 basisStream.SetLength(0);
                 tempFileStream.Seek(0, SeekOrigin.Begin);
                 await tempFileStream.CopyToAsync(basisStream);
                 await basisStream.FlushAsync();
-                _logger.Debug("For file {file} applied delta", filePath);
+                _logger?.Debug("For file {file} applied delta", filePath);
+
+                var lastTimeWrite = file.Value.FileInfo.ModificationTime;
+                _fs.File.SetLastWriteTimeUtc(filePath, lastTimeWrite);
+                _logger?.Debug("For file {file} set last write time {time}", filePath, lastTimeWrite);
             }
         }
     }

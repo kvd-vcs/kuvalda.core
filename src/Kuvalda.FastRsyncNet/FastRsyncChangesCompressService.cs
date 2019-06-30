@@ -58,7 +58,7 @@ namespace Kuvalda.FastRsyncNet
 
             var deltas = diffTasks.Select(h => h.Result)
                 .Where(i => i.hash != null)
-                .ToDictionary(i => i.modify, i => i.hash);
+                .ToDictionary(i => i.file, i => new CompressModel.DeltaInfo{ DeltaHash = i.hash, FileInfo = i.node });
 
             return new CompressModel()
             {
@@ -69,23 +69,23 @@ namespace Kuvalda.FastRsyncNet
             };
         }
 
-        private async Task<(string modify, string hash)> CompressFile(string modify, Dictionary<string, TreeNode> flatTreeSrc, Dictionary<string, TreeNode> flatTreeDst)
+        private async Task<(string file, string hash, TreeNodeFile node)> CompressFile(string file, Dictionary<string, TreeNode> flatTreeSrc, Dictionary<string, TreeNode> flatTreeDst)
         {
-            _logger?.Debug("Begin check delta for file {file}", modify);
-
-            var srcNode = flatTreeSrc[modify];
-            var dstNode = flatTreeDst[modify];
+            var srcNode = flatTreeSrc[file];
+            var dstNode = flatTreeDst[file];
 
             if (srcNode is TreeNodeFolder)
             {
-                return (modify, null);
+                return (file, null, null);
             }
 
             if (srcNode.GetType() != dstNode.GetType())
             {
                 _logger?.Error("Inconsistent diff tree nodes. src: {@Src}, dst: {@Dst}", srcNode, dstNode);
-                return (modify, null);
+                return (file, null, null);
             }
+            
+            _logger?.Debug("Begin check delta for file {file}", file);
 
             var srcNodeFile = srcNode as TreeNodeFile;
             var dstNodeFile = dstNode as TreeNodeFile;
@@ -107,10 +107,16 @@ namespace Kuvalda.FastRsyncNet
                 {
                     delta.BuildDelta(dstStream, new SignatureReader(signatureStream, new Progress<ProgressReport>()),
                         new AggregateCopyOperationsDecorator(new BinaryDeltaWriter(deltaStream)));
+                    
+                    _logger?.Debug("Build delta finish for file {file}", file);
+                    
                     deltaStream.Seek(0, SeekOrigin.Begin);
                     var hash = await _hashComputeProvider.Compute(deltaStream);
                     _objectStorage.Set(hash, deltaStream);
-                    return (modify, hash);
+                    
+                    _logger?.Debug("Delta for file {file} stored as {blob} blob", file, hash);
+                    
+                    return (file, hash, dstNodeFile);
                 }
             }
         }

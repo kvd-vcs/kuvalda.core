@@ -30,5 +30,8 @@ namespace Kuvalda.Cli
             
             return 0;
         }
+        
+        public string GetHelp() => "<commit message> - create and store commit with custom message";
+
     }
 }
