@@ -12,6 +12,7 @@
         <RepositoryUrl>https://github.com/kvd-scm/kuvalda.core</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageTags>scm git versioning updating</PackageTags>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     </PropertyGroup>
 
     <ItemGroup>

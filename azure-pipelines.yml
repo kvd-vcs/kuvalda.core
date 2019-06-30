@@ -4,8 +4,10 @@ pool:
 steps:
 
 - task: GitVersion@4
+  displayName: Git version
   inputs:
     updateAssemblyInfo: true
+    updateAssemblyInfoFilename: 'Properties/AssemblyInfo.cs'
 
 - task: DotNetCoreCLI@2
   displayName: Build
@@ -24,7 +26,7 @@ steps:
     command: 'pack'
     packagesToPack: '**/Kuvalda.Core.csproj'
     nobuild: true
-    versioningScheme: 'off'
+    versioningScheme: 'byBuildNumber'
 
 - task: PublishBuildArtifacts@1
   displayName: Publish artifacts
