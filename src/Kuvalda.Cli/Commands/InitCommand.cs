@@ -19,5 +19,7 @@ namespace Kuvalda.Cli
             await _repositoryFacade.Initialize(_applicationInstanceSettings.RepositoryPath);
             return 0;
         }
+        
+        public string GetHelp() => "initialize repository";
     }
 }

@@ -1,37 +1,62 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Kuvalda.Cli
 {
     public class Startup : IStartup
     {
-        private readonly ILogger<Startup> _logger;
         private readonly IDictionary<string, ICliCommand> _commands;
+        private readonly HelpCommand _helpCommand;
+        private readonly ILogger _logger;
 
-        public Startup(ILogger<Startup> logger, IDictionary<string, ICliCommand> commands)
+        public Startup(IDictionary<string, ICliCommand> commands, HelpCommand helpCommand, ILogger logger)
         {
-            _logger = logger;
-            _commands = commands;
+            _commands = commands ?? throw new ArgumentNullException(nameof(commands));
+            _helpCommand = helpCommand ?? throw new ArgumentNullException(nameof(helpCommand));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task Run(string[] args)
         {
+            _logger.Debug("Begin application handle command. Arguments: {args}, available commands: {commands}", args, _commands.Keys);
+            
             var commands = args.SkipWhile(a => a.StartsWith("--"));
             var commandName = commands.FirstOrDefault();
-
+            
+            _logger.Debug("Command name: {name}", commandName);
+            
             ICliCommand command = null;
-            if (commandName == null)
+            if (string.IsNullOrEmpty(commandName))
             {
-                command = _commands["help"];
+                command = _helpCommand;
             }
-            else
+            else if (_commands.ContainsKey(commandName))
             {
                 command = _commands[commandName];
             }
+            else
+            {
+                _logger.Fatal("Not found command {name}", commandName);
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            _logger.Debug("Found command {commandType}, begin execution", command);
+
+            try
+            {
+                Environment.ExitCode = await command.Execute(commands.ToArray());
+            }
+            catch (Exception e)
+            {
+                _logger.Fatal(e, "Unhandled Exception");
+                Environment.ExitCode = 2;
+            }
             
-            System.Environment.ExitCode = await command.Execute(commands.ToArray());
+            _logger.Debug("Execution ended. Exit code is {exitCode}", Environment.ExitCode);
         }
     }
 }

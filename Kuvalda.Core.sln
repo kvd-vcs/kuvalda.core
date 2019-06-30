@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuvalda.Core", "src\Kuvalda
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuvalda.Cli", "src\Kuvalda.Cli\Kuvalda.Cli.csproj", "{3AFA8F47-9F7F-44D1-B63F-842BA1BFCC80}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Kuvalda.FastRsyncNet", "src\Kuvalda.FastRsyncNet\Kuvalda.FastRsyncNet.csproj", "{546D7A27-78C8-40A5-B64B-4B0633B72D3B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,6 +33,10 @@ Global
 		{3AFA8F47-9F7F-44D1-B63F-842BA1BFCC80}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3AFA8F47-9F7F-44D1-B63F-842BA1BFCC80}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3AFA8F47-9F7F-44D1-B63F-842BA1BFCC80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{546D7A27-78C8-40A5-B64B-4B0633B72D3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{546D7A27-78C8-40A5-B64B-4B0633B72D3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{546D7A27-78C8-40A5-B64B-4B0633B72D3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{546D7A27-78C8-40A5-B64B-4B0633B72D3B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -39,6 +45,7 @@ Global
 		{1DFA9BD3-B390-4C7C-B704-2AA8E7B4AE98} = {4053E670-6E5F-4558-B070-AE2F7CFFA447}
 		{E418BDE6-9CD4-4760-8C23-8D450C5FB8AC} = {2A32D4E5-B274-4AA5-9A16-62A09B36AB4A}
 		{3AFA8F47-9F7F-44D1-B63F-842BA1BFCC80} = {2A32D4E5-B274-4AA5-9A16-62A09B36AB4A}
+		{546D7A27-78C8-40A5-B64B-4B0633B72D3B} = {2A32D4E5-B274-4AA5-9A16-62A09B36AB4A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {598826FF-6826-46D2-B7E9-FE83CCDDF787}

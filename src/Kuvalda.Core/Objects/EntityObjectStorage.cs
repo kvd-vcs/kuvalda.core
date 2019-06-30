@@ -1,45 +1,56 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using Serilog;
 
 namespace Kuvalda.Core
 {
     public class EntityObjectStorage<TEntity> : IEntityObjectStorage<TEntity>
     {
-        public readonly IObjectStorage Storage;
-        public readonly ISerializationProvider SerializationProvider;
-        public readonly IHashComputeProvider HashComputeProvider;
+        private readonly IObjectStorage _storage;
+        private readonly ISerializationProvider _serializationProvider;
+        private readonly IHashComputeProvider _hashComputeProvider;
+        private readonly ILogger _logger;
 
         public EntityObjectStorage(IObjectStorage storage, ISerializationProvider serializationProvider,
-            IHashComputeProvider hashComputeProvider)
+            IHashComputeProvider hashComputeProvider, ILogger logger)
         {
-            Storage = storage ?? throw new ArgumentNullException(nameof(storage));
-            SerializationProvider =
+            _storage = storage ?? throw new ArgumentNullException(nameof(storage));
+            _serializationProvider =
                 serializationProvider ?? throw new ArgumentNullException(nameof(serializationProvider));
-            HashComputeProvider = hashComputeProvider ?? throw new ArgumentNullException(nameof(hashComputeProvider));
+            _hashComputeProvider = hashComputeProvider ?? throw new ArgumentNullException(nameof(hashComputeProvider));
+            _logger = logger;
         }
 
         public bool IsExists(string key)
         {
-            return Storage.Exist(key);
+            return _storage.Exist(key);
         }
 
-        public Task<TEntity> Get(string key)
+        public async Task<TEntity> Get(string key)
         {
-            return Task.Run(() => SerializationProvider.Deserialize<TEntity>(Storage.Get(key)));
+            return await Task.Run(() =>
+            {
+                using (var stream = _storage.Get(key))
+                {
+                    _logger?.Debug("Requested object {key} with type {type}", key, typeof(TEntity));
+                    return _serializationProvider.Deserialize<TEntity>(stream);
+                }
+            });
         }
 
-        public Task<string> Store(TEntity entity)
+        public async Task<string> Store(TEntity entity)
         {
-            return Task.Run(async () =>
+            return await Task.Run(async () =>
             {
                 using (var stream = new MemoryStream())
                 {
-                    SerializationProvider.Serialize(entity, stream);
+                    _serializationProvider.Serialize(entity, stream);
                     stream.Position = 0;
-                    var hash = await HashComputeProvider.Compute(stream);
+                    var hash = await _hashComputeProvider.Compute(stream);
                     stream.Position = 0;
-                    Storage.Set(hash, stream);
+                    _storage.Set(hash, stream);
+                    _logger?.Debug("Stored object {key} with type {type}", hash, typeof(TEntity));
                     return hash;
                 }
             });

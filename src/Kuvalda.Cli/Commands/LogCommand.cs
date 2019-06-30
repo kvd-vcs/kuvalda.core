@@ -26,5 +26,7 @@ namespace Kuvalda.Cli
             
             return 0;
         }
+        
+        public string GetHelp() => "show commit history from current HEAD commit";
     }
 }
