@@ -6,6 +6,7 @@ steps:
 - task: GitVersion@4
   inputs:
     updateAssemblyInfo: true
+    updateAssemblyInfoFilename: 'Properties/AssemblyInfo.cs'
 
 - task: DotNetCoreCLI@2
   displayName: Build
