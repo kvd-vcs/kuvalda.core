@@ -9,6 +9,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Kuvalda.Core\Kuvalda.Core.csproj" />
       <ProjectReference Include="..\Kuvalda.FastRsyncNet\Kuvalda.FastRsyncNet.csproj" />
+      <ProjectReference Include="..\Kuvalda.Storage.Http\Kuvalda.Storage.Http.csproj" />
     </ItemGroup>
 
     <ItemGroup>

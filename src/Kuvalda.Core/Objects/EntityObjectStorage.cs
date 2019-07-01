@@ -22,38 +22,32 @@ namespace Kuvalda.Core
             _logger = logger;
         }
 
-        public bool IsExists(string key)
+        public async Task<bool> IsExists(string key)
         {
-            return _storage.Exist(key);
+            return await _storage.Exist(key);
         }
 
         public async Task<TEntity> Get(string key)
         {
-            return await Task.Run(() =>
+            using (var stream = await _storage.Get(key))
             {
-                using (var stream = _storage.Get(key))
-                {
-                    _logger?.Debug("Requested object {key} with type {type}", key, typeof(TEntity));
-                    return _serializationProvider.Deserialize<TEntity>(stream);
-                }
-            });
+                _logger?.Debug("Requested object {key} with type {type}", key, typeof(TEntity));
+                return _serializationProvider.Deserialize<TEntity>(stream);
+            }
         }
 
         public async Task<string> Store(TEntity entity)
         {
-            return await Task.Run(async () =>
+            using (var stream = new MemoryStream())
             {
-                using (var stream = new MemoryStream())
-                {
-                    _serializationProvider.Serialize(entity, stream);
-                    stream.Position = 0;
-                    var hash = await _hashComputeProvider.Compute(stream);
-                    stream.Position = 0;
-                    _storage.Set(hash, stream);
-                    _logger?.Debug("Stored object {key} with type {type}", hash, typeof(TEntity));
-                    return hash;
-                }
-            });
+                _serializationProvider.Serialize(entity, stream);
+                stream.Position = 0;
+                var hash = await _hashComputeProvider.Compute(stream);
+                stream.Position = 0;
+                await _storage.Set(hash, stream);
+                _logger?.Debug("Stored object {key} with type {type}", hash, typeof(TEntity));
+                return hash;
+            }
         }
     }
 }

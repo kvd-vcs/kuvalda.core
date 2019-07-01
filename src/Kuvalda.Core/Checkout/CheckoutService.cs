@@ -66,7 +66,7 @@ namespace Kuvalda.Core.Checkout
                     using (var modifyStream =
                         _fileSystem.File.Open(modifiedPath, FileMode.Truncate, FileAccess.Write, FileShare.Write))
                     {
-                        var source = _blobStorage.Get(fileNode.Hash);
+                        var source = await _blobStorage.Get(fileNode.Hash);
                         await source.CopyToAsync(modifyStream);
                         await modifyStream.FlushAsync();
                         modifyStream.Close();
@@ -95,7 +95,7 @@ namespace Kuvalda.Core.Checkout
                     {
                         using (var addStream = _fileSystem.File.Create(addingPath))
                         {
-                            var source = _blobStorage.Get(fileNode.Hash);
+                            var source = await _blobStorage.Get(fileNode.Hash);
                             await source.CopyToAsync(addStream);
                             await addStream.FlushAsync();
                             addStream.Close();

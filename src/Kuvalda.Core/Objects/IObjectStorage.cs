@@ -1,11 +1,12 @@
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Kuvalda.Core
 {
     public interface IObjectStorage
     {
-        bool Exist(string key);
-        Stream Get(string key);
-        void Set(string key, Stream obj);
+        Task<bool> Exist(string key);
+        Task<Stream> Get(string key);
+        Task Set(string key, Stream obj);
     }
 }

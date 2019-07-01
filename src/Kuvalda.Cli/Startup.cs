@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Kuvalda.Core;
+using Kuvalda.Storage.Http;
 using Serilog;
 
 namespace Kuvalda.Cli
@@ -11,12 +13,20 @@ namespace Kuvalda.Cli
         private readonly IDictionary<string, ICliCommand> _commands;
         private readonly HelpCommand _helpCommand;
         private readonly ILogger _logger;
+        
+        private readonly RepositoryOptions _options;
+        private readonly ApplicationInstanceSettings _instanceOptions;
+        private readonly EndpointOptions _endpointOptions;
 
-        public Startup(IDictionary<string, ICliCommand> commands, HelpCommand helpCommand, ILogger logger)
+        public Startup(IDictionary<string, ICliCommand> commands, HelpCommand helpCommand, ILogger logger,
+            RepositoryOptions options, ApplicationInstanceSettings instanceOptions, EndpointOptions endpointOptions)
         {
             _commands = commands ?? throw new ArgumentNullException(nameof(commands));
             _helpCommand = helpCommand ?? throw new ArgumentNullException(nameof(helpCommand));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _options = options;
+            _instanceOptions = instanceOptions;
+            _endpointOptions = endpointOptions;
         }
 
         public async Task Run(string[] args)
@@ -27,6 +37,10 @@ namespace Kuvalda.Cli
             var commandName = commands.FirstOrDefault();
             
             _logger.Debug("Command name: {name}", commandName);
+            
+            _logger.Debug("Engine options: {@engineOptions}", _options);
+            _logger.Debug("Instance options: {@instanceOptions}", _instanceOptions);
+            _logger.Debug("Endpoint options: {@endpointOptions}", _endpointOptions);
             
             ICliCommand command = null;
             if (string.IsNullOrEmpty(commandName))

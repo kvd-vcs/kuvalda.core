@@ -41,12 +41,12 @@ namespace Kuvalda.Core
                     continue;
                 }
                 
-                waitStoreTasks.Add(Task.Run(() =>
+                waitStoreTasks.Add(Task.Run(async () =>
                 {
                     var filePath = _fileSystem.Path.Combine(commit.Path, path);
                     using (var file = _fileSystem.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     {
-                        _blobStorage.Set(fileNode.Hash, file);
+                        await _blobStorage.Set(fileNode.Hash, file);
                     }
                 }));
             }

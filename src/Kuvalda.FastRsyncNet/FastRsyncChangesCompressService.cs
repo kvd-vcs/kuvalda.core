@@ -90,8 +90,8 @@ namespace Kuvalda.FastRsyncNet
             var srcNodeFile = srcNode as TreeNodeFile;
             var dstNodeFile = dstNode as TreeNodeFile;
 
-            var srcStream = _objectStorage.Get(srcNodeFile.Hash);
-            var dstStream = _objectStorage.Get(dstNodeFile.Hash);
+            var srcStream = await _objectStorage.Get(srcNodeFile.Hash);
+            var dstStream = await _objectStorage.Get(dstNodeFile.Hash);
 
             using (srcStream)
             using (dstStream)
@@ -112,7 +112,7 @@ namespace Kuvalda.FastRsyncNet
                     
                     deltaStream.Seek(0, SeekOrigin.Begin);
                     var hash = await _hashComputeProvider.Compute(deltaStream);
-                    _objectStorage.Set(hash, deltaStream);
+                    await _objectStorage.Set(hash, deltaStream);
                     
                     _logger?.Debug("Delta for file {file} stored as {blob} blob", file, hash);
                     
