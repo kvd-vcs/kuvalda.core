@@ -40,7 +40,7 @@ namespace Kuvalda.Core
                 return null;
             }
 
-            if (!_storage.IsExists(indexItem))
+            if (!await _storage.IsExists(indexItem))
             {
                 _logger.Warning("DB consistency warning. Not found patch from index reference. src commit: {srcCommit}, dst commit: {dstCommit}",
                     srcCommit, dstCommit);

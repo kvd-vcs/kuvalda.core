@@ -59,7 +59,7 @@ namespace KuvaldaTests
             };
 
             _treeStorageMock.Setup(s => s.Store(node)).Returns(Task.FromResult(thash));
-            _blobStorageMock.Setup(s => s.Set(fhash, It.IsAny<Stream>()));
+            _blobStorageMock.Setup(s => s.Set(fhash, It.IsAny<Stream>())).Returns(Task.CompletedTask);
             _commitStorageMock.Setup(s => s.Store(commitModel)).Returns(Task.FromResult(chash));
             _flatTreeCreator.Setup(s => s.Create(It.IsAny<TreeNode>(), "/")).Returns(new [] {new FlatTreeItem("file", node)});
             

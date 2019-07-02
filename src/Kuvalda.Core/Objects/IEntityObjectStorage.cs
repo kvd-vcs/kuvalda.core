@@ -5,7 +5,7 @@ namespace Kuvalda.Core
 {
     public interface IEntityObjectStorage<TEntity>
     {
-        bool IsExists(string key);
+        Task<bool> IsExists(string key);
         
         /// <summary>
         ///     Find entity in storage and return the object

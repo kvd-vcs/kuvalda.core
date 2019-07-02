@@ -59,7 +59,7 @@ namespace Kuvalda.FastRsyncNet
             var filePath = _fs.Path.Combine(path, file.Key);
             var delta = new DeltaApplier {SkipHashCheck = true};
             using (var basisStream = _fs.File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
-            using (var deltaStream = _objectStorage.Get(file.Value.DeltaHash))
+            using (var deltaStream = await _objectStorage.Get(file.Value.DeltaHash))
             using (var tempFileStream = _tempObjectStorage.CreateTemp())
             {
                 var deltaReader = new BinaryDeltaReader(deltaStream, new Progress<ProgressReport>());

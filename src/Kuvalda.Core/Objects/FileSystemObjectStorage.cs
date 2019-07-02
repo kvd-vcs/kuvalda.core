@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.IO.Abstractions;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 
 namespace Kuvalda.Core
 {
@@ -16,12 +17,12 @@ namespace Kuvalda.Core
             StoragePath = storagePath;
         }
 
-        public bool Exist(string key)
+        public Task<bool> Exist(string key)
         {
-            return _fileSystem.File.Exists(ObjectPath(key));
+            return Task.FromResult(_fileSystem.File.Exists(ObjectPath(key)));
         }
 
-        public Stream Get(string key)
+        public Task<Stream> Get(string key)
         {
             var path = ObjectPath(key);
             if (!_fileSystem.File.Exists(path))
@@ -29,10 +30,10 @@ namespace Kuvalda.Core
                 throw new FileNotFoundException(path);
             }
             
-            return _fileSystem.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return Task.FromResult(_fileSystem.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read));
         }
 
-        public void Set(string key, Stream obj)
+        public async Task Set(string key, Stream obj)
         {
             var objPath = ObjectPath(key);
             var objPreFolderPath = _fileSystem.Path.GetDirectoryName(objPath);
@@ -45,7 +46,7 @@ namespace Kuvalda.Core
             using (var fileStream = _fileSystem.File.Create(objPath))
             {
                 obj.Seek(0, SeekOrigin.Begin);
-                obj.CopyTo(fileStream);
+                await obj.CopyToAsync(fileStream);
             }
         }
 
