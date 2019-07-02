@@ -26,24 +26,22 @@ namespace Kuvalda.Core
 
         public bool IsInitialized(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
-            return _fileSystem.File.Exists(systemFolderPath);
+            return _fileSystem.File.Exists(_options.SystemFolderPath);
         }
         
         public async Task Initialize(string path)
         {
-            var systemFolderPath = _fileSystem.Path.Combine(path, _options.RepositorySystemFolder);
-            if (_fileSystem.Directory.Exists(systemFolderPath))
+            if (_fileSystem.Directory.Exists(_options.SystemFolderPath))
             {
                 _logger.Warning("Try initialize alredy initialized repository at path {RepositoryPath}", path);
                 return;
             }
 
-            _fileSystem.Directory.CreateDirectory(systemFolderPath);
-            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(systemFolderPath, "refs"));
-            _fileSystem.File.Create(_fileSystem.Path.Combine(systemFolderPath, "refs", _options.HeadFilePath)).Close();
+            _fileSystem.Directory.CreateDirectory(_options.SystemFolderPath);
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.Combine(_options.SystemFolderPath, "refs"));
+            _fileSystem.File.Create(_fileSystem.Path.Combine(_options.SystemFolderPath, "refs", _options.HeadFileName)).Close();
             
-            _logger.Information("Create repository system folder at {RepositoryPath}", systemFolderPath);
+            _logger.Information("Create repository system folder at {RepositoryPath}", _options.SystemFolderPath);
 
             var initCommit = await _commitCreateService.CreateCommit();
             var initChash = await _commitStoreService.StoreCommit(initCommit);

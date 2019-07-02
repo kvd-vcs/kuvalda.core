@@ -7,16 +7,12 @@ namespace Kuvalda.Core
 {
     public class RefsService : IRefsService
     {
-        private readonly string _systemPath;
         private readonly IFileSystem _fs;
         private readonly RepositoryOptions _options;
         private readonly ILogger _logger;
         
-        public RefsService(string systemPath, IFileSystem fileSystem, RepositoryOptions options, ILogger logger)
+        public RefsService(IFileSystem fileSystem, RepositoryOptions options, ILogger logger)
         {
-            _systemPath = !string.IsNullOrEmpty(systemPath)
-                ? systemPath
-                : throw new ArgumentNullException(nameof(systemPath));
             _fs = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _options = options ?? throw new ArgumentNullException(nameof(options));;
             _logger = logger;
@@ -24,7 +20,7 @@ namespace Kuvalda.Core
 
         public bool Exists(string name)
         {
-            return _fs.File.Exists(_fs.Path.Combine(_systemPath, "refs", name));
+            return _fs.File.Exists(_fs.Path.Combine(_options.SystemFolderPath, "refs", name));
         }
 
         public Reference Get(string name)
@@ -65,7 +61,7 @@ namespace Kuvalda.Core
         {
             var prefix = value is PointerReference ? "ref" : "commit";
             var format = $"{prefix}:{value.Value}";
-            _fs.File.WriteAllText(_fs.Path.Combine(_systemPath, "refs", name), format);
+            _fs.File.WriteAllText(_fs.Path.Combine(_options.SystemFolderPath, "refs", name), format);
             _logger?.Debug("Stored reference {name} with data {data}", name, format);
         }
 
@@ -88,25 +84,25 @@ namespace Kuvalda.Core
         
         public void SetHead(Reference value)
         {
-            var head = GetInternal(_options.HeadFilePath);
+            var head = GetInternal(_options.HeadFileName);
             
             switch (head)
             {
                 case null:
                 case EmptyReference _:
-                    Store(_options.HeadFilePath, value);
+                    Store(_options.HeadFileName, value);
                     break;
                 case PointerReference _ when !(value is PointerReference):
                     Store(head.Value, value);
                     return;
             }
 
-            Store(_options.HeadFilePath, value);
+            Store(_options.HeadFileName, value);
         }
 
         public Reference GetHead()
         {
-            var reference = GetInternal(_fs.Path.Combine(_systemPath, "refs", _options.HeadFilePath));
+            var reference = GetInternal(_fs.Path.Combine(_options.SystemFolderPath, "refs", _options.HeadFileName));
             if (reference == null)
             {
                 throw new FileNotFoundException($"Head reference not found. Check db consistency");
@@ -122,7 +118,7 @@ namespace Kuvalda.Core
                 return null;
             }
             
-            var value = _fs.File.ReadAllText(_fs.Path.Combine(_systemPath, "refs", name));
+            var value = _fs.File.ReadAllText(_fs.Path.Combine(_options.SystemFolderPath, "refs", name));
             if (string.IsNullOrEmpty(value))
             {
                 return new EmptyReference();

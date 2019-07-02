@@ -20,7 +20,7 @@ namespace Kuvalda.Cli
 
         public async Task<int> Execute(string[] args)
         {
-            var log = await _repositoryFacade.GetLog(new LogOptions(){Reference = _options.HeadFilePath});
+            var log = await _repositoryFacade.GetLog(new LogOptions(){Reference = _options.HeadFileName});
             
             Console.WriteLine(JsonConvert.SerializeObject(log, Formatting.Indented));
             

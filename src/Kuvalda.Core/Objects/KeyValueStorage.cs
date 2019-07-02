@@ -8,21 +8,22 @@ namespace Kuvalda.Core
     public class KeyValueStorage : IKeyValueStorage
     {
         private readonly IFileSystem _fs;
-        private readonly string _path;
         private readonly ILogger _logger;
+        private readonly RepositoryOptions _options;
 
-        public KeyValueStorage(IFileSystem fs, string storagePath, ILogger logger)
+        private const string KEYS_FOLDER_NAME = "keys";
+        private string Path => _fs.Path.Combine(_options.SystemFolderPath, KEYS_FOLDER_NAME);
+
+        public KeyValueStorage(IFileSystem fs, ILogger logger, RepositoryOptions options)
         {
             _fs = fs ?? throw new ArgumentNullException(nameof(fs));
             _logger = logger;
-            _path = !string.IsNullOrEmpty(storagePath)
-                ? storagePath
-                : throw new ArgumentException(nameof(storagePath));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public async Task<string> Get(string key)
         {
-            var path = _fs.Path.Combine(_path, key);
+            var path = _fs.Path.Combine(Path, key);
 
             if (!_fs.File.Exists(path))
             {
@@ -37,13 +38,14 @@ namespace Kuvalda.Core
 
         public Task Set(string key, string value)
         {
-            if (!_fs.Directory.Exists(_path))
+
+            if (!_fs.Directory.Exists(Path))
             {
-                _logger?.Debug("Create keys folder at path {path}", _path);
-                _fs.Directory.CreateDirectory(_path);
+                _logger?.Debug("Create keys folder at path {path}", Path);
+                _fs.Directory.CreateDirectory(Path);
             }
             
-            var path = _fs.Path.Combine(_path, key);
+            var path = _fs.Path.Combine(Path, key);
             
             if (_fs.File.Exists(path))
             {
