@@ -27,7 +27,7 @@ namespace Kuvalda.Storage.Http
             
             var response = await _client.GetAsync(uri);
             
-            _log?.Debug("Take respone GET method for uri: {uri} with status code {code}", uri, response.StatusCode);
+            _log?.Debug("Take response GET method for uri: {uri} with status code {code}", uri, response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {

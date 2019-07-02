@@ -31,7 +31,7 @@ namespace Kuvalda.Storage.Http
             
             var response = await _client.SendAsync(request);
             
-            _log?.Debug("Take respone HEAD method for uri: {uri} with status code {code}", uri, response.StatusCode);
+            _log?.Debug("Take response HEAD method for uri: {uri} with status code {code}", uri, response.StatusCode);
 
             return response.IsSuccessStatusCode;
         }
@@ -46,7 +46,7 @@ namespace Kuvalda.Storage.Http
             
             var response = await _client.SendAsync(request);
             
-            _log?.Debug("Take respone GET method for uri: {uri} with status code {code}", uri, response.StatusCode);
+            _log?.Debug("Take response GET method for uri: {uri} with status code {code}", uri, response.StatusCode);
             
             return await response.Content.ReadAsStreamAsync();
         }
