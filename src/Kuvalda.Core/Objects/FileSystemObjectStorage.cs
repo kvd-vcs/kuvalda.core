@@ -8,13 +8,16 @@ namespace Kuvalda.Core
 {
     public class FileSystemObjectStorage : IObjectStorage
     {
-        public readonly IFileSystem _fileSystem;
-        public string StoragePath { get; set; }
+        private readonly IFileSystem _fileSystem;
+        private readonly RepositoryOptions _options;
 
-        public FileSystemObjectStorage(IFileSystem fileSystem, string storagePath)
+        private const string OBJECTS_FOLDER_NAME = "objects";
+        private string _path => _fileSystem.Path.Combine(_options.SystemFolderPath, OBJECTS_FOLDER_NAME);
+
+        public FileSystemObjectStorage(IFileSystem fileSystem, RepositoryOptions options)
         {
-            _fileSystem = fileSystem;
-            StoragePath = storagePath;
+            _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public Task<bool> Exist(string key)
@@ -63,7 +66,7 @@ namespace Kuvalda.Core
 
         private string ObjectPath(string hash)
         {
-            return _fileSystem.Path.Combine(StoragePath, DividedPathHash(hash));
+            return _fileSystem.Path.Combine(_path, DividedPathHash(hash));
         }
     }
 }

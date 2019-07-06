@@ -7,25 +7,28 @@ namespace Kuvalda.Core
 {
     public class TempObjectStorage : ITempObjectStorage
     {
-        private readonly string _storagePath;
         private readonly IFileSystem _fs;
         private readonly ILogger _logger;
+        private readonly RepositoryOptions _options;
+        
+        private const string TEMP_FOLDER_NAME = "temp";
+        private string _path => _fs.Path.Combine(_options.SystemFolderPath, TEMP_FOLDER_NAME);
 
-        public TempObjectStorage(string storagePath, IFileSystem fs, ILogger logger)
+        public TempObjectStorage(IFileSystem fs, ILogger logger, RepositoryOptions options)
         {
-            _storagePath = storagePath;
-            _fs = fs;
-            _logger = logger;
+            _fs = fs ?? throw new ArgumentNullException(nameof(fs));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
         public Stream CreateTemp()
         {
-            if (!_fs.Directory.Exists(_storagePath))
+            if (!_fs.Directory.Exists(_path))
             {
-                _fs.Directory.CreateDirectory(_storagePath);
+                _fs.Directory.CreateDirectory(_path);
             }
             
-            var tempName = _fs.Path.Combine(_storagePath, Guid.NewGuid().ToString());
+            var tempName = _fs.Path.Combine(_path, Guid.NewGuid().ToString());
             var file = _fs.File.Create(tempName);
             return new TempFileStream(file, tempName, _fs, _logger);
         }

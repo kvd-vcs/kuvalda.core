@@ -17,8 +17,6 @@ namespace Kuvalda.Cli
 {
     partial class Program
     {
-        private const string TEMP_FOLDER_NAME = "temp";
-        private const string OBJECTS_FOLDER_NAME = "objects";
 
         private const string KVD_CONFIG_FILE_NAME = "config.json";
         private const string KVD_ENVIRONMENT_VARIABLE_PREFIX = "KVD_";
@@ -52,8 +50,8 @@ namespace Kuvalda.Cli
 
             _options = new RepositoryOptions()
             {
-                RepositorySystemFolder = _conf[nameof(RepositoryOptions.RepositorySystemFolder)],
-                HeadFilePath = _conf[nameof(RepositoryOptions.HeadFilePath)],
+                SystemFolderPath = _conf[nameof(RepositoryOptions.SystemFolderPath)],
+                HeadFileName = _conf[nameof(RepositoryOptions.HeadFileName)],
                 DefaultBranchName = _conf[nameof(RepositoryOptions.DefaultBranchName)],
                 MessageLabel = _conf[nameof(RepositoryOptions.MessageLabel)]
             };
@@ -74,15 +72,16 @@ namespace Kuvalda.Cli
         
         private KeyValuePair<string, string>[] GetDefaultConfigurationCollection()
         {
+            var envFolder = Environment.CurrentDirectory;
+            
             return new Dictionary<string, string>
             {
-                
-                [nameof(RepositoryOptions.RepositorySystemFolder)] = KVD_REPO_SYSTEM_FOLDER_NAME,
-                [nameof(RepositoryOptions.HeadFilePath)] = KVD_REPO_HEAD_FILE_NAME,
+                [nameof(RepositoryOptions.SystemFolderPath)] = Path.Combine(envFolder, KVD_REPO_SYSTEM_FOLDER_NAME),
+                [nameof(RepositoryOptions.HeadFileName)] = KVD_REPO_HEAD_FILE_NAME,
                 [nameof(RepositoryOptions.DefaultBranchName)] = KVD_REPO_DEFAULT_BRANCH_NAME,
                 [nameof(RepositoryOptions.MessageLabel)] = KVD_REPO_MESSAGE_LABEL_NAME,
                 
-                [nameof(ApplicationInstanceSettings.RepositoryPath)] = Environment.CurrentDirectory,
+                [nameof(ApplicationInstanceSettings.RepositoryPath)] = envFolder,
                 [nameof(ApplicationInstanceSettings.IsHttpReadOnly)] = KVD_REPO_DEFAULT_IS_READONLY,
                 
                 [nameof(EndpointOptions.RepoUrl)] = KVD_URL_DEFAULT_HUB,
@@ -102,8 +101,7 @@ namespace Kuvalda.Cli
 
             var svc = new ServiceCollection();
 
-            svc.AddSingleton(Log.Logger)
-                .AddLogging(builder => builder.AddSerilog());
+            svc.AddSingleton(ctx => Log.Logger).AddLogging(builder => builder.AddSerilog());
 
             AddConfiguration(_args, svc);
             AddTreeServices(svc);
@@ -130,19 +128,12 @@ namespace Kuvalda.Cli
                 .AddTransient<IChangesDecompressService, FastRsyncChangesDecompressService>()
                 .AddTransient<IRepositoryCompressFacade, RepositoryCompressFacade>()
                 .AddTransient<CheckoutService>()
-                .AddTransient<ICheckoutService, CheckoutDecompressService>(ctx =>
-                {
-                    var checkout = ctx.GetRequiredService<CheckoutService>();
-                    var refs = ctx.GetRequiredService<IRefsService>();
-                    var repoCompressFacade = ctx.GetRequiredService<IRepositoryCompressFacade>();
-                    return new CheckoutDecompressService(checkout, refs, repoCompressFacade);
-                });
+                .AddTransient<ICheckoutService, CheckoutDecompressService>(CheckoutDecompressServiceFactory);
         }
 
         private void AddHashServices(ServiceCollection svc)
         {
             svc.AddTransient<IHashComputeProvider, SHA2HashComputeProvider>()
-                .AddTransient<IHashModificationFactory, HashModificationFactory>()
                 .AddTransient<IHashTableCreator, HashTableCreator>()
                 .AddTransient<IHashModificationFactory, HashModificationFactory>();
         }
@@ -153,45 +144,16 @@ namespace Kuvalda.Cli
                 .AddTransient<IEntityObjectStorage<CommitModel>, EntityObjectStorage<CommitModel>>()
                 .AddTransient<IEntityObjectStorage<TreeNode>, EntityObjectStorage<TreeNode>>()
                 .AddTransient<IEntityObjectStorage<CompressModel>, EntityObjectStorage<CompressModel>>()
-                .AddTransient<IEntityObjectStorage<IDictionary<string, string>>,
-                    EntityObjectStorage<IDictionary<string, string>>>()
+                .AddTransient<IEntityObjectStorage<IDictionary<string, string>>, EntityObjectStorage<IDictionary<string, string>>>()
                 .AddTransient<ICommitStoreService, CommitStoreService>()
-                .AddTransient<ITempObjectStorage, TempObjectStorage>(ctx =>
-                {
-                    var filesystem = ctx.GetRequiredService<IFileSystem>();
-                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
-                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, TEMP_FOLDER_NAME);
-                    var logger = ctx.GetRequiredService<ILogger>();
-                    return new TempObjectStorage(path, filesystem, logger);
-                })
-                .AddTransient<IRefsService, RefsService>(ctx =>
-                {
-                    var filesystem = ctx.GetRequiredService<IFileSystem>();
-                    var options = ctx.GetRequiredService<RepositoryOptions>();
-                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
-                        options.RepositorySystemFolder);
-                    var logger = ctx.GetRequiredService<ILogger>();
-                    return new RefsService(path, filesystem, options, logger);
-                })
+                .AddTransient<ITempObjectStorage, TempObjectStorage>()
+                .AddTransient<IRefsService, RefsService>()
                 .AddTransient<ICompressObjectsStorage, CompressObjectsStorage>();
 
             if (!_instanceOptions.IsHttpReadOnly)
             {
-                svc.AddTransient<IObjectStorage, FileSystemObjectStorage>(ctx =>
-                {
-                    var filesystem = ctx.GetRequiredService<IFileSystem>();
-                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
-                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, OBJECTS_FOLDER_NAME);
-                    return new FileSystemObjectStorage(filesystem, path);
-                });
-                svc.AddTransient<IKeyValueStorage, KeyValueStorage>(ctx =>
-                {
-                    var filesystem = ctx.GetRequiredService<IFileSystem>();
-                    var path = Path.Combine(ctx.GetRequiredService<ApplicationInstanceSettings>().RepositoryPath,
-                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder, "keys");
-                    var logger = ctx.GetRequiredService<ILogger>();
-                    return new KeyValueStorage(filesystem, path, logger);
-                });
+                svc.AddTransient<IObjectStorage, FileSystemObjectStorage>();
+                svc.AddTransient<IKeyValueStorage, KeyValueStorage>();
             }
             else
             {
@@ -203,15 +165,7 @@ namespace Kuvalda.Cli
 
         private void AddTreeServices(ServiceCollection svc)
         {
-            svc.AddTransient<ITreeFilter, TreeFilter>(ctx =>
-                {
-                    var service = new TreeFilter(ctx.GetRequiredService<IFileSystem>());
-                    service.PredefinedIgnores = new List<string>()
-                    {
-                        ctx.GetRequiredService<RepositoryOptions>().RepositorySystemFolder
-                    };
-                    return service;
-                })
+            svc.AddTransient<ITreeFilter, TreeFilter>(TreeFilterFactory)
                 .AddTransient<TreeCreator>()
                 .AddTransient<ITreeCreator, TreeCreatorFiltered>(ctx => new TreeCreatorFiltered(
                     ctx.GetRequiredService<TreeCreator>(), ctx.GetRequiredService<ITreeFilter>()))
@@ -251,6 +205,22 @@ namespace Kuvalda.Cli
             serviceCollection.AddSingleton(_options);
             serviceCollection.AddSingleton(_instanceOptions);
             serviceCollection.AddSingleton(_endpointOptions);
+        }
+
+        private TreeFilter TreeFilterFactory(IServiceProvider ctx)
+        {
+            return new TreeFilter(ctx.GetRequiredService<IFileSystem>())
+            {
+                PredefinedIgnores = new List<string> {KVD_REPO_SYSTEM_FOLDER_NAME}
+            };
+        }
+        
+        private static CheckoutDecompressService CheckoutDecompressServiceFactory(IServiceProvider ctx)
+        {
+            var checkout = ctx.GetRequiredService<CheckoutService>();
+            var refs = ctx.GetRequiredService<IRefsService>();
+            var repoCompressFacade = ctx.GetRequiredService<IRepositoryCompressFacade>();
+            return new CheckoutDecompressService(checkout, refs, repoCompressFacade);
         }
     }
 }
