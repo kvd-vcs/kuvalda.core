@@ -12,6 +12,11 @@ namespace Kuvalda.Core
             Nodes = new TreeNode[0];
         }
         
+        public TreeNodeFolder(string name, params TreeNode[] childs) : base(name)
+        {
+            Nodes = childs;
+        }
+        
         protected bool Equals(TreeNodeFolder other)
         {
             return base.Equals(other) && Nodes.SequenceEqual(other.Nodes);

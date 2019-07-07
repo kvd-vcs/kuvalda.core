@@ -14,7 +14,7 @@ namespace Kuvalda.Core
             _commitEntity = commitEntity ?? throw new ArgumentNullException(nameof(commitEntity));
         }
 
-        public async Task<CommitModel> FindBase(string leftCHash, string rightCHash)
+        public async Task<string> FindBase(string leftCHash, string rightCHash)
         {
             if (string.IsNullOrEmpty(leftCHash))
             {
@@ -48,7 +48,7 @@ namespace Kuvalda.Core
             return null;
         }
         
-        private async Task<CommitModel> ProcessCommit(Queue<string> queue, HashSet<string> heap)
+        private async Task<string> ProcessCommit(Queue<string> queue, HashSet<string> heap)
         {
             if (!queue.Any())
             {
@@ -58,7 +58,7 @@ namespace Kuvalda.Core
             var currentCHash = queue.Dequeue();
             if (heap.Contains(currentCHash))
             {
-                return await _commitEntity.Get(currentCHash);
+                return currentCHash;
             }
 
             heap.Add(currentCHash);

@@ -7,6 +7,6 @@ namespace Kuvalda.Core
     /// </summary>
     public interface IBaseCommitFinder
     {
-        Task<CommitModel> FindBase(string leftCHash, string rightCHash);
+        Task<string> FindBase(string leftCHash, string rightCHash);
     }
 }

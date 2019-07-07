@@ -59,9 +59,8 @@ namespace KuvaldaTests
         public async Task Test_FindBase_ShouldReturnBaseCommitForSingleBinaryTree()
         {
             // Arrange
-            var baseCommit = new CommitModel {Parents = new string[0]};
             _storage.Setup(s => s.Get("0"))
-                .Returns(Task.FromResult(baseCommit));
+                .Returns(Task.FromResult(new CommitModel {Parents = new string[0]}));
             
             _storage.Setup(s => s.Get("1"))
                 .Returns(Task.FromResult(new CommitModel {Parents = new []{"0"}}));
@@ -74,7 +73,7 @@ namespace KuvaldaTests
             
             // Assert
             Assert.NotNull(result);
-            Assert.AreEqual(baseCommit, result);
+            Assert.AreEqual("0", result);
         }
         
         [Test]
@@ -89,16 +88,15 @@ namespace KuvaldaTests
             
             // Assert
             Assert.NotNull(result);
-            Assert.AreEqual(commit, result);
+            Assert.AreEqual("0", result);
         }
         
         [Test]
         public async Task Test_FindBase_ShouldReturnBaseCommitForSingleBinaryTreeWithTail()
         {
             // Arrange
-            var baseCommit = new CommitModel {Parents = new []{"-1"}};
             _storage.Setup(s => s.Get("0"))
-                .Returns(Task.FromResult(baseCommit));
+                .Returns(Task.FromResult(new CommitModel {Parents = new []{"-1"}}));
             
             _storage.Setup(s => s.Get("1"))
                 .Returns(Task.FromResult(new CommitModel {Parents = new []{"0"}}));
@@ -111,20 +109,18 @@ namespace KuvaldaTests
             
             // Assert
             Assert.NotNull(result);
-            Assert.AreEqual(baseCommit, result);
+            Assert.AreEqual("0", result);
         }
         
         [Test]
         public async Task Test_FindBase_ShouldReturnBaseCommitForTreeWithMerges()
         {
             // Arrange
-            var baseCommit = new CommitModel {Parents = new []{"-1"}};
-            
             _storage.Setup(s => s.Get("-1"))
                 .Returns(Task.FromResult(new CommitModel {Parents = new string[0]}));
             
             _storage.Setup(s => s.Get("0"))
-                .Returns(Task.FromResult(baseCommit));
+                .Returns(Task.FromResult(new CommitModel {Parents = new []{"-1"}}));
             
             _storage.Setup(s => s.Get("1"))
                 .Returns(Task.FromResult(new CommitModel {Parents = new []{"-1", "0"}}));
@@ -137,7 +133,7 @@ namespace KuvaldaTests
             
             // Assert
             Assert.NotNull(result);
-            Assert.AreEqual(baseCommit, result);
+            Assert.AreEqual("0", result);
         }
     }
 }
