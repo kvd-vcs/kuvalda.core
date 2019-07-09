@@ -2,6 +2,9 @@ namespace Kuvalda.Core.Merge
 {
     public class MergeOperationSuccessResult : MergeOperationResult
     {
-        public CommitModel Commit { get; set; }
+        public string LeftParent { get; set; }
+        public string RightParent { get; set; }
+        public string BaseCommit { get; set; }
+        public TreeNode MergedTree { get; set; }
     }
 }
