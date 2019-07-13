@@ -1,10 +1,11 @@
 using System;
+using System.Globalization;
 
 namespace Kuvalda.Core
 {
     public class TreeNodeFile : TreeNode
     {
-        public readonly DateTime ModificationTime;
+        public DateTime ModificationTime;
         public string Hash;
         
         public TreeNodeFile(string name, DateTime modificationTime, string hash = null) : base(name)
@@ -39,6 +40,16 @@ namespace Kuvalda.Core
         public override object Clone()
         {
             return new TreeNodeFile(Name, ModificationTime, Hash);
+        }
+
+        public override bool DeepEquals(TreeNode other)
+        {
+            return Equals((object)other) && string.Equals(Hash, ((TreeNodeFile)other).Hash);
+        }
+
+        public override string ToString()
+        {
+            return $"Type: file, Name: {Name}, ModificationTime: {ModificationTime.ToString(CultureInfo.InvariantCulture)}, Hash: {Hash}";
         }
     }
 }

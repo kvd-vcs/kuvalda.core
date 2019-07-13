@@ -7,6 +7,13 @@ namespace Kuvalda.Core.Merge
 {
     public class TreeMergeService : ITreeMergeService
     {
+        private readonly INowDateTimeService _nowDateTimeService;
+
+        public TreeMergeService(INowDateTimeService nowDateTimeService)
+        {
+            _nowDateTimeService = nowDateTimeService ?? throw new ArgumentNullException(nameof(nowDateTimeService));
+        }
+
         public TreeNode Merge(TreeNode left, TreeNode right)
         {
             left = left ?? throw new ArgumentNullException(nameof(left));
@@ -14,7 +21,7 @@ namespace Kuvalda.Core.Merge
 
             if (!left.Name.Equals(right.Name))
             {
-                throw new ArgumentException("Mismatch nodes");
+                throw new ConflictTreeException($"Mismatch node names. left: {left}, right: {right}");
             }
 
             if (left is TreeNodeFolder leftFolder && right is TreeNodeFolder rightFolder)
@@ -27,7 +34,7 @@ namespace Kuvalda.Core.Merge
                 return MergeFiles(leftFile, rightFile);
             }
             
-            throw new ConflictTreeException();
+            throw new ConflictTreeException($"Mismatch node types. left: {left.GetType()}, right: {right.GetType()}");
         }
 
         private TreeNode MergeFolders(TreeNodeFolder leftFolder, TreeNodeFolder rightFolder)
@@ -39,13 +46,41 @@ namespace Kuvalda.Core.Merge
 
         private TreeNode MergeFiles(TreeNodeFile leftFile, TreeNodeFile rightFile)
         {
-            throw new NotImplementedException();
+            if (leftFile.DeepEquals(rightFile))
+            {
+                return leftFile;
+            }
+
+            if (string.Equals(leftFile.Hash, rightFile.Hash))
+            {
+                var newNode = (TreeNodeFile)leftFile.Clone();
+                newNode.ModificationTime = _nowDateTimeService.GetNow();
+                return newNode;
+            }
+            
+            throw new ConflictTreeException($"Conflict when merge files. Left: {{{leftFile}}}, right: {{{rightFile}}}");
         }
 
         private TreeNode[] MergeList(IEnumerable<TreeNode> leftFolderNodes, IEnumerable<TreeNode> rightFolderNodes)
         {
             var mergeField = leftFolderNodes.Union(rightFolderNodes);
-            return null;
+            var result = mergeField.GroupBy(n => n.Name).Select(MergeUnionGroup);
+            return result.ToArray();
+        }
+
+        private TreeNode MergeUnionGroup(IGrouping<string, TreeNode> group)
+        {
+            if (group.Count() > 2)
+            {
+                throw new ConflictTreeException("Cant merge group of 3 or more nodes");
+            }
+
+            if (group.Count() == 1)
+            {
+                return group.Single();
+            }
+
+            return Merge(group.First(), group.Last());
         }
     }
 }
