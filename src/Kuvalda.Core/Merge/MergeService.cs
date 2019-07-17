@@ -8,16 +8,16 @@ namespace Kuvalda.Core.Merge
     {
         private readonly ICommitGetService _commitGetter;
         private readonly IBaseCommitFinder _commitFinder;
-        private readonly IDifferenceEntriesCreator _entriesCreator;
         private readonly ITreeMergeService _mergeService;
+        private readonly IConflictDetectService _detectService;
 
         public MergeService(ICommitGetService commitGetter, IBaseCommitFinder commitFinder, 
-            IDifferenceEntriesCreator entriesCreator, ITreeMergeService mergeService)
+            ITreeMergeService mergeService, IConflictDetectService detectService)
         {
             _commitGetter = commitGetter ?? throw new ArgumentNullException(nameof(commitGetter));
             _commitFinder = commitFinder ?? throw new ArgumentNullException(nameof(commitFinder));
-            _entriesCreator = entriesCreator ?? throw new ArgumentNullException(nameof(entriesCreator));
             _mergeService = mergeService ?? throw new ArgumentNullException(nameof(mergeService));
+            _detectService = detectService ?? throw new ArgumentNullException(nameof(detectService));
         }
 
         public async Task<MergeOperationResult> Merge(string leftChash, string rightChash)
@@ -42,7 +42,7 @@ namespace Kuvalda.Core.Merge
             var rightCommit = await _commitGetter.GetCommit(rightChash);
             var baseCommit = await _commitGetter.GetCommit(baseCHash);
 
-            var conflicts = DetectConflicts(baseCommit, leftCommit, rightCommit);
+            var conflicts = _detectService.Detect(baseCommit.Tree, leftCommit.Tree, rightCommit.Tree).ToList();
 
             if (conflicts.Any())
             {
@@ -59,23 +59,6 @@ namespace Kuvalda.Core.Merge
                 RightParent = rightChash,
                 MergedTree = _mergeService.Merge(leftCommit.Tree, rightCommit.Tree)
             };
-        }
-
-        private string[] DetectConflicts(CommitDto baseCommit, CommitDto leftCommit, CommitDto rightCommit)
-        {
-            var leftDiff = _entriesCreator.Create(baseCommit.Tree, leftCommit.Tree);
-            var rightDiff = _entriesCreator.Create(baseCommit.Tree, rightCommit.Tree);
-
-            var modifiedConflict = leftDiff.Modified.Intersect(rightDiff.Modified);
-            var addedRemovedConflict = leftDiff.Added.Intersect(rightDiff.Removed)
-                .Union(leftDiff.Removed.Intersect(rightDiff.Added));
-            var addedConflicts = leftDiff.Added.Intersect(rightDiff.Added);
-
-            var conflicts = modifiedConflict.Union(addedRemovedConflict)
-                .Union(addedConflicts)
-                .ToArray();
-
-            return conflicts;
         }
     }
 }

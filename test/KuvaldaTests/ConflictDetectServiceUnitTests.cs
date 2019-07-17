@@ -203,5 +203,75 @@ namespace KuvaldaTests
             Assert.NotNull(result);
             Assert.IsTrue(result.SequenceEqual(expected));
         }
+        
+        [Test]
+        public void Test_Detect_ShouldIgnoreModifiedFolder()
+        {
+            // Arrange
+            var now = DateTime.Now;
+            var baseTree = new TreeNodeFolder("folder");
+            var leftTree = new TreeNodeFolder("folder");
+            var rightTree = new TreeNodeFolder("folder");
+            var leftFlat = new[] {new FlatTreeItem("folder", leftTree)};
+            var rightFlat = new[] {new FlatTreeItem("folder", rightTree)};
+
+            _diffCreator.Setup(creator => creator.Create(baseTree, leftTree))
+                .Returns(new DifferenceEntries(new string[0], new []{"folder"}, new string[0]));
+            _diffCreator.Setup(creator => creator.Create(baseTree, rightTree))
+                .Returns(new DifferenceEntries(new string[0], new []{"folder"}, new string[0]));
+
+            _flatTreeCreator.Setup(s => s.Create(leftTree, "/")).Returns(leftFlat);
+            _flatTreeCreator.Setup(s => s.Create(rightTree, "/")).Returns(rightFlat);
+
+            var expected = new MergeConflict[0];
+
+            // Act
+            var result = _service.Detect(baseTree, leftTree, rightTree);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
+        
+        [Test]
+        public void Test_Detect_ShouldConflict1DeepTree()
+        {
+            // Arrange
+            var now = DateTime.Now;
+            var baseTree = new TreeNodeFolder("folder", new TreeNodeFile("file", now, "file"));
+            var leftTree = new TreeNodeFolder("folder", new TreeNodeFile("file", now, "file1"));
+            var rightTree = new TreeNodeFolder("folder", new TreeNodeFile("file", now, "file2"));
+            var leftFlat = new[]
+            {
+                new FlatTreeItem("folder", leftTree),
+                new FlatTreeItem("folder/file", new TreeNodeFile("file", now, "file1"))
+            };
+            var rightFlat = new[]
+            {
+                new FlatTreeItem("folder", leftTree),
+                new FlatTreeItem("folder/file", new TreeNodeFile("file", now, "file2"))
+            };
+
+            _diffCreator.Setup(creator => creator.Create(baseTree, leftTree))
+                .Returns(new DifferenceEntries(new string[0], new []{"folder", "folder/file"}, new string[0]));
+            _diffCreator.Setup(creator => creator.Create(baseTree, rightTree))
+                .Returns(new DifferenceEntries(new string[0], new []{"folder",  "folder/file"}, new string[0]));
+
+            _flatTreeCreator.SetupSequence(s => s.Create(It.IsAny<TreeNode>(), "/"))
+                .Returns(leftFlat)
+                .Returns(rightFlat);
+
+            var expected = new[]
+            {
+                new MergeConflict("folder/file", MergeConflictReason.Modify, MergeConflictReason.Modify), 
+            };
+
+            // Act
+            var result = _service.Detect(baseTree, leftTree, rightTree);
+            
+            // Assert
+            Assert.NotNull(result);
+            Assert.IsTrue(result.SequenceEqual(expected));
+        }
     }
 }
