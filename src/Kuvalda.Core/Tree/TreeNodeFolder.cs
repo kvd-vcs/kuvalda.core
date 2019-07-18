@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,6 +6,10 @@ namespace Kuvalda.Core
     public class TreeNodeFolder : TreeNode
     {
         public IEnumerable<TreeNode> Nodes;
+
+        public TreeNodeFolder() : base(null)
+        {
+        }
         
         public TreeNodeFolder(string name) : base(name)
         {

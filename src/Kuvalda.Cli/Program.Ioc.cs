@@ -6,11 +6,13 @@ using System.Linq;
 using System.Net.Http;
 using Kuvalda.Core;
 using Kuvalda.Core.Checkout;
+using Kuvalda.Core.Merge;
 using Kuvalda.Core.Status;
 using Kuvalda.FastRsyncNet;
 using Kuvalda.Storage.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 namespace Kuvalda.Cli
@@ -128,7 +130,13 @@ namespace Kuvalda.Cli
                 .AddTransient<IChangesDecompressService, FastRsyncChangesDecompressService>()
                 .AddTransient<IRepositoryCompressFacade, RepositoryCompressFacade>()
                 .AddTransient<CheckoutService>()
-                .AddTransient<ICheckoutService, CheckoutDecompressService>(CheckoutDecompressServiceFactory);
+                .AddTransient<ICheckoutService, CheckoutDecompressService>(CheckoutDecompressServiceFactory)
+                .AddTransient<INowDateTimeService, NowDateTimeService>()
+                .AddTransient<ITreeMergeService, TreeMergeService>()
+                .AddTransient<IMergeService, MergeService>()
+                .AddTransient<IRepositoryMergeService, RepositoryMergeService>()
+                .AddTransient<IBaseCommitFinder, BaseCommitFinder>()
+                .AddTransient<IConflictDetectService, ConflictDetectService>();
         }
 
         private void AddHashServices(ServiceCollection svc)
@@ -183,7 +191,8 @@ namespace Kuvalda.Cli
                 .AddTransient<LogCommand>()
                 .AddTransient<CheckoutCommand>()
                 .AddTransient<CompressCommand>()
-                .AddTransient<DecompressCommand>();
+                .AddTransient<DecompressCommand>()
+                .AddTransient<MergeCommand>();
 
             svc.AddSingleton<IDictionary<string, ICliCommand>>(ctx => new Dictionary<string, ICliCommand>()
             {
@@ -194,6 +203,7 @@ namespace Kuvalda.Cli
                 ["log"] = ctx.GetRequiredService<LogCommand>(),
                 ["compress"] = ctx.GetRequiredService<CompressCommand>(),
                 ["decompress"] = ctx.GetRequiredService<DecompressCommand>(),
+                ["merge"] = ctx.GetRequiredService<MergeCommand>(),
             });
 
             svc.AddTransient<IStartup, Startup>();

@@ -5,6 +5,8 @@ namespace Kuvalda.Core.Merge
 {
     public class MergeOperationConflictResult : MergeOperationResult
     {
+        public IEnumerable<MergeConflict> ConflictedFiles { get; set; }
+        
         protected bool Equals(MergeOperationConflictResult other)
         {
             return ConflictedFiles != null && other != null && ConflictedFiles.SequenceEqual(other.ConflictedFiles);
@@ -18,8 +20,5 @@ namespace Kuvalda.Core.Merge
             return Equals((MergeOperationConflictResult) obj);
         }
 
-        public IEnumerable<MergeConflict> ConflictedFiles { get; set; }
-        
-        
     }
 }

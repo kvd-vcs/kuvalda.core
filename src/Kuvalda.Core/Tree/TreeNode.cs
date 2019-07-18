@@ -4,7 +4,7 @@ namespace Kuvalda.Core
 {
     public abstract class TreeNode : ICloneable
     {
-        public readonly string Name;
+        public string Name;
 
         protected TreeNode(string name)
         {
