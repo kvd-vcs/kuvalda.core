@@ -4,7 +4,7 @@ namespace Kuvalda.Core
 {
     public abstract class TreeNode : ICloneable
     {
-        public readonly string Name;
+        public string Name;
 
         protected TreeNode(string name)
         {
@@ -30,5 +30,10 @@ namespace Kuvalda.Core
         }
 
         public abstract object Clone();
+
+        public virtual bool DeepEquals(TreeNode other)
+        {
+            return Equals((object)other);
+        }
     }
 }

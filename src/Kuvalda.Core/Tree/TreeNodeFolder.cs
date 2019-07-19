@@ -6,10 +6,19 @@ namespace Kuvalda.Core
     public class TreeNodeFolder : TreeNode
     {
         public IEnumerable<TreeNode> Nodes;
+
+        public TreeNodeFolder() : base(null)
+        {
+        }
         
         public TreeNodeFolder(string name) : base(name)
         {
             Nodes = new TreeNode[0];
+        }
+        
+        public TreeNodeFolder(string name, params TreeNode[] childs) : base(name)
+        {
+            Nodes = childs;
         }
         
         protected bool Equals(TreeNodeFolder other)

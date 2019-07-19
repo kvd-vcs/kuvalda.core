@@ -39,6 +39,8 @@ namespace Kuvalda.Core
                 }
             }
 
+            logs = logs.GroupBy(e => e.CHash).Select(g => g.FirstOrDefault()).ToList();
+            
             return new LogResult()
             {
                 Entries = logs
