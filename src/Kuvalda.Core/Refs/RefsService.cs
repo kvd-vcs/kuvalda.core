@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.IO.Abstractions;
+using System.Linq;
+using System.Threading.Tasks;
 using Serilog;
 
 namespace Kuvalda.Core
@@ -18,14 +20,14 @@ namespace Kuvalda.Core
             _logger = logger;
         }
 
-        public bool Exists(string name)
+        public async Task<bool> Exists(string name)
         {
             return _fs.File.Exists(_fs.Path.Combine(_options.SystemFolderPath, "refs", name));
         }
 
-        public Reference Get(string name)
+        public async Task<Reference> Get(string name)
         {
-            var reference = GetInternal(name);
+            var reference = await GetInternal(name);
             
             if (reference is EmptyReference)
             {
@@ -35,74 +37,83 @@ namespace Kuvalda.Core
             return reference;
         }
         
-        public string GetCommit(string name)
+        public async Task<string> GetCommit(string name)
         {
-            var reference = GetInternal(name);
+            var reference = await GetInternal(name);
             
-            if (reference is EmptyReference)
+            switch (reference)
             {
-                throw new InvalidDataException($"Reference {name} is empty");
+                case EmptyReference _:
+                    throw new InvalidDataException($"Reference {name} is empty");
+                
+                case CommitReference _:
+                    return reference.Value;
+                
+                case PointerReference _:
+                    return await GetCommit(reference.Value);
+                
+                default:
+                    return reference.Value;
             }
-
-            if (reference is CommitReference)
-            {
-                return reference.Value;
-            }
-            
-            if (reference is PointerReference)
-            {
-                return GetCommit(reference.Value);
-            }
-
-            return reference.Value;
         }
 
-        public void Store(string name, Reference value)
+        public Task Store(string name, Reference value)
         {
             var prefix = value is PointerReference ? "ref" : "commit";
             var format = $"{prefix}:{value.Value}";
             _fs.File.WriteAllText(_fs.Path.Combine(_options.SystemFolderPath, "refs", name), format);
             _logger?.Debug("Stored reference {name} with data {data}", name, format);
+            return Task.CompletedTask;
         }
 
-        public string GetHeadCommit()
+        public async Task<string> GetHeadCommit()
         {
-            var reference = GetHead();
-            
-            if (reference is PointerReference p)
-            {
-                var chashRef = Get(p.Value);
-                if (chashRef == null)
-                {
-                    throw new InvalidDataException($"Reference is null. Check db consistency");
-                }
-                return chashRef.Value;
-            }
+            var reference = await GetHead();
 
-            return reference.Value;
+            if (!(reference is PointerReference p))
+            {
+                return reference.Value;
+            }
+            
+            var chashRef = await Get(p.Value);
+            if (chashRef == null)
+            {
+                throw new InvalidDataException($"Reference is null. Check db consistency");
+            }
+            
+            return chashRef.Value;
         }
         
-        public void SetHead(Reference value)
+        public async Task SetHead(Reference value)
         {
-            var head = GetInternal(_options.HeadFileName);
+            var head = await GetInternal(_options.HeadFileName);
             
             switch (head)
             {
                 case null:
                 case EmptyReference _:
-                    Store(_options.HeadFileName, value);
+                    await Store(_options.HeadFileName, value);
                     break;
                 case PointerReference _ when !(value is PointerReference):
-                    Store(head.Value, value);
+                    await Store(head.Value, value);
                     return;
             }
 
-            Store(_options.HeadFileName, value);
+            await Store(_options.HeadFileName, value);
         }
 
-        public Reference GetHead()
+        public Task<string[]> GetAll()
         {
-            var reference = GetInternal(_fs.Path.Combine(_options.SystemFolderPath, "refs", _options.HeadFileName));
+            var path = _fs.Path.Combine(_options.SystemFolderPath, "refs");
+            var files = _fs.Directory.GetFiles(path, "*",
+                    SearchOption.AllDirectories)
+                .Select(file => file.Replace(path, ""));
+            return Task.FromResult(files.ToArray());
+        }
+
+        public async Task<Reference> GetHead()
+        {
+            var reference = await GetInternal(_fs.Path.Combine(_options.SystemFolderPath, "refs", _options.HeadFileName));
             if (reference == null)
             {
                 throw new FileNotFoundException($"Head reference not found. Check db consistency");
@@ -111,9 +122,9 @@ namespace Kuvalda.Core
             return reference;
         }
         
-        private Reference GetInternal(string name)
+        private async Task<Reference> GetInternal(string name)
         {
-            if (!Exists(name))
+            if (!await Exists(name))
             {
                 return null;
             }

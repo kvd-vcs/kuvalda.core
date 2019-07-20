@@ -228,9 +228,8 @@ namespace Kuvalda.Cli
         private static CheckoutDecompressService CheckoutDecompressServiceFactory(IServiceProvider ctx)
         {
             var checkout = ctx.GetRequiredService<CheckoutService>();
-            var refs = ctx.GetRequiredService<IRefsService>();
             var repoCompressFacade = ctx.GetRequiredService<IRepositoryCompressFacade>();
-            return new CheckoutDecompressService(checkout, refs, repoCompressFacade);
+            return new CheckoutDecompressService(checkout, repoCompressFacade);
         }
     }
 }

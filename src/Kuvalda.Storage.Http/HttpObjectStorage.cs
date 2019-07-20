@@ -7,7 +7,7 @@ using Serilog;
 
 namespace Kuvalda.Storage.Http
 {
-    public class HttpObjectStorage : IObjectStorage
+    public class HttpObjectStorage : IRemoteObjectStorage
     {
         private readonly HttpClient _client;
         private readonly EndpointOptions _options;
@@ -51,9 +51,32 @@ namespace Kuvalda.Storage.Http
             return await response.Content.ReadAsStreamAsync();
         }
 
-        public Task Set(string key, Stream obj)
+        public async Task Set(string key, Stream obj)
         {
-            throw new NotImplementedException("Write by http not allowed. Protocol is readonly");
+            if (!await Exist(key))
+            {
+                _log.Debug("Ignore sending object {key}, object exist", key);
+                return;
+            }
+            
+            var splitKey = $"{key.Substring(0, 2)}/{key.Substring(2)}";
+            var uri = _options.GetPushObjectUri(splitKey);
+            var request = new HttpRequestMessage(HttpMethod.Post, uri);
+            request.Content = new StreamContent(obj);
+            
+            _log?.Debug("Start sending object for with uri: {uri}", uri);
+            
+            var response = await _client.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _log?.Debug("Sent object with uri: {uri}", uri);
+            }
+            else
+            {
+                _log?.Fatal("Sending object with uri {uri} failed. Status code: {code}", uri, response.StatusCode);
+                throw new HttpSendErrorException($"Send error. response: {response.ToString()}");
+            }
         }
     }
 }

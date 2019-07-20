@@ -1,13 +1,16 @@
+using System.Threading.Tasks;
+
 namespace Kuvalda.Core
 {
     public interface IRefsService
     {
-        bool Exists(string name);
-        Reference Get(string name);
-        string GetCommit(string name);
-        void Store(string name, Reference reference);
-        Reference GetHead();
-        string GetHeadCommit();
-        void SetHead(Reference value);
+        Task<bool> Exists(string name);
+        Task<Reference> Get(string name);
+        Task<string> GetCommit(string name);
+        Task Store(string name, Reference reference);
+        Task<Reference> GetHead();
+        Task<string> GetHeadCommit();
+        Task SetHead(Reference value);
+        Task<string[]> GetAll();
     }
 }
