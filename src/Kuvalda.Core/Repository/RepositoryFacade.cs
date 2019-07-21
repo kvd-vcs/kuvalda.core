@@ -40,11 +40,11 @@ namespace Kuvalda.Core
 
         public async Task<CommitResult> Commit(CommitOptions options)
         {
-            var currentChash = _refsService.GetHeadCommit();
+            var currentChash = await _refsService.GetHeadCommit();
             var commitData = await _commitService.CreateCommit(options.Path, currentChash);
             commitData.Commit.Labels[_repositoryOptions.MessageLabel] = options.Message;
             var chash = await _commitService.StoreCommit(commitData);
-            _refsService.SetHead(new CommitReference(chash));
+            await _refsService.SetHead(new CommitReference(chash));
             
             return new CommitResult()
             {
@@ -65,7 +65,7 @@ namespace Kuvalda.Core
 
         public async Task<StatusResult> GetStatus(StatusOptions options)
         {
-            var result = await _statusService.GetStatus(options.RepositoryPath,_refsService.GetHeadCommit());
+            var result = await _statusService.GetStatus(options.RepositoryPath,await _refsService.GetHeadCommit());
             return new StatusResult()
             {
                 Added = result.Added,

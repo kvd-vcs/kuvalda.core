@@ -18,7 +18,7 @@ namespace Kuvalda.Core
 
         public async Task<LogResult> GetLog(LogOptions options)
         {
-            var headCHash = _refsService.GetCommit(options.Reference);
+            var headCHash = await _refsService.GetCommit(options.Reference);
             var queue = new Queue<string>(new []{headCHash});
             var logs = new List<LogEntry>();
 

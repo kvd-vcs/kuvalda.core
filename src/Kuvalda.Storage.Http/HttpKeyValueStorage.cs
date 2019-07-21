@@ -6,7 +6,7 @@ using Serilog;
 
 namespace Kuvalda.Storage.Http
 {
-    public class HttpKeyValueStorage : IKeyValueStorage
+    public class HttpKeyValueStorage : IRemoteKeyValueStorage
     {
         private readonly HttpClient _client;
         private readonly EndpointOptions _options;
@@ -37,9 +37,20 @@ namespace Kuvalda.Storage.Http
             return await response.Content.ReadAsStringAsync();
         }
 
-        public Task Set(string key, string value)
+        public async Task Set(string key, string value)
         {
-            throw new System.NotImplementedException("Write by http not allowed. Protocol is readonly");
+            var uri = _options.GetPushTagUri(key);
+            
+            _log?.Debug("Request http POST method for uri: {uri}", uri);
+            
+            var response = await _client.PostAsync(uri, new StringContent(value));
+            
+            _log?.Debug("Take response POST method for uri: {uri} with status code {code}", uri, response.StatusCode);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpSendErrorException();
+            }
         }
     }
 }

@@ -136,7 +136,8 @@ namespace Kuvalda.Cli
                 .AddTransient<IMergeService, MergeService>()
                 .AddTransient<IRepositoryMergeService, RepositoryMergeService>()
                 .AddTransient<IBaseCommitFinder, BaseCommitFinder>()
-                .AddTransient<IConflictDetectService, ConflictDetectService>();
+                .AddTransient<IConflictDetectService, ConflictDetectService>()
+                .AddTransient<IReferenceFactory, ReferenceFactory>();
         }
 
         private void AddHashServices(ServiceCollection svc)
@@ -228,9 +229,8 @@ namespace Kuvalda.Cli
         private static CheckoutDecompressService CheckoutDecompressServiceFactory(IServiceProvider ctx)
         {
             var checkout = ctx.GetRequiredService<CheckoutService>();
-            var refs = ctx.GetRequiredService<IRefsService>();
             var repoCompressFacade = ctx.GetRequiredService<IRepositoryCompressFacade>();
-            return new CheckoutDecompressService(checkout, refs, repoCompressFacade);
+            return new CheckoutDecompressService(checkout, repoCompressFacade);
         }
     }
 }

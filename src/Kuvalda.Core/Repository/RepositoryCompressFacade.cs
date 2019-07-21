@@ -35,7 +35,7 @@ namespace Kuvalda.Core
 
         public async Task<PatchResult> Patch(PatchOptions options)
         {
-            var headCommit = _refsService.GetHeadCommit();
+            var headCommit = await _refsService.GetHeadCommit();
             var patch = await _compressStorage.Get(headCommit, options.DestinationCommit);
             if (patch == null)
             {
