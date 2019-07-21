@@ -136,7 +136,8 @@ namespace Kuvalda.Cli
                 .AddTransient<IMergeService, MergeService>()
                 .AddTransient<IRepositoryMergeService, RepositoryMergeService>()
                 .AddTransient<IBaseCommitFinder, BaseCommitFinder>()
-                .AddTransient<IConflictDetectService, ConflictDetectService>();
+                .AddTransient<IConflictDetectService, ConflictDetectService>()
+                .AddTransient<IReferenceFactory, ReferenceFactory>();
         }
 
         private void AddHashServices(ServiceCollection svc)

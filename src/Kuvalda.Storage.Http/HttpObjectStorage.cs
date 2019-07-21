@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Kuvalda.Core;
 using Serilog;
 
 namespace Kuvalda.Storage.Http

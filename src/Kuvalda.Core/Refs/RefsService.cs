@@ -11,18 +11,22 @@ namespace Kuvalda.Core
     {
         private readonly IFileSystem _fs;
         private readonly RepositoryOptions _options;
+        private readonly IReferenceFactory _referenceFactory;
         private readonly ILogger _logger;
-        
-        public RefsService(IFileSystem fileSystem, RepositoryOptions options, ILogger logger)
+
+        public RefsService(IFileSystem fileSystem, RepositoryOptions options, IReferenceFactory referenceFactory,
+            ILogger logger)
         {
             _fs = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-            _options = options ?? throw new ArgumentNullException(nameof(options));;
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            ;
+            _referenceFactory = referenceFactory ?? throw new ArgumentNullException(nameof(referenceFactory));
             _logger = logger;
         }
 
-        public async Task<bool> Exists(string name)
+        public Task<bool> Exists(string name)
         {
-            return _fs.File.Exists(_fs.Path.Combine(_options.SystemFolderPath, "refs", name));
+            return Task.FromResult(_fs.File.Exists(_fs.Path.Combine(_options.SystemFolderPath, "refs", name)));
         }
 
         public async Task<Reference> Get(string name)
@@ -130,30 +134,7 @@ namespace Kuvalda.Core
             }
             
             var value = _fs.File.ReadAllText(_fs.Path.Combine(_options.SystemFolderPath, "refs", name));
-            if (string.IsNullOrEmpty(value))
-            {
-                return new EmptyReference();
-            }
-
-            var data = value.Split(new []{ ":" }, StringSplitOptions.RemoveEmptyEntries);
-            if (data.Length != 2)
-            {
-                throw new InvalidDataException($"Reference {name} not valid. Expected `prefix:value` format");
-            }
-
-            _logger?.Debug("Requested reference {ref}, value: {@value}", name, data);
-            
-            switch (data[0])
-            {
-                case "ref":
-                    return new PointerReference(data[1]);
-                
-                case "commit":
-                    return new CommitReference(data[1]);
-                
-                default:
-                    throw new NotSupportedException($"Not supported `{data[0]}` reference type");
-            }
+            return _referenceFactory.Create(value);
         }
     }
 }
